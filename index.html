@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tutor de Estadística </title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen transition-colors duration-500">
+
+    <div class="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- Encabezado -->
+        <header class="glass-card p-6 text-center relative overflow-hidden">
+            <div class="absolute top-4 right-4 z-20">
+                <button id="themeToggle"
+                    class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    title="Cambiar Tema">
+                    <span id="themeIcon" class="text-xl">🌙</span>
+                </button>
+            </div>
+            <div class="relative z-10">
+                <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-2">
+                    <span class="inline-block align-middle mr-1">📊</span>
+                    <span class="premium-gradient-text align-middle">Tutor de Estadística</span>
+                </h1>
+                <p class="text-slate-700 dark:text-slate-400 font-medium tracking-wide"> • Aprendizaje Interactivo •
+                </p>
+            </div>
+        </header>
+
+        <!-- Configuración -->
+        <section class="glass-card p-6 md:p-8 animate-fade-in-up">
+            <h2
+                class="text-2xl font-bold flex items-center gap-3 mb-8 text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-4">
+                <span
+                    class="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg text-xl flex items-center justify-center text-indigo-700 dark:text-indigo-300">⚙️</span>
+                Configuración de Datos
+            </h2>
+
+            <!-- Fila principal de formulario -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <!-- Datos Input -->
+                <div class="space-y-3">
+                    <label for="dataInput"
+                        class="block text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Datos
+                        (separados por comas)</label>
+                    <input type="text" id="dataInput" value="4, 7, 13, 2, 1, 8, 5, 3"
+                        class="w-full bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl p-4 text-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Ej: 4, 7, 13, 2, 1, 8, 5, 3" />
+                </div>
+
+                <!-- Selector de Módulo -->
+                <div class="space-y-3">
+                    <label for="moduleSelect"
+                        class="block text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Seleccionar
+                        Módulo</label>
+                    <select id="moduleSelect"
+                        class="w-full bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-md rounded-xl p-4 shadow-sm focus:ring-2 focus:ring-indigo-500">
+                        <option value="">— Selecciona un módulo estadístico —</option>
+
+                        <optgroup label="1. Muestreo Probabilístico">
+                            <option value="muestreo_simple">Muestreo Aleatorio Simple</option>
+                            <option value="muestreo_sistematico">Muestreo Sistemático</option>
+                            <option value="muestreo_estratificado">Muestreo Estratificado</option>
+                            <option value="muestreo_conglomerados">Muestreo por Conglomerados</option>
+                        </optgroup>
+
+                        <optgroup label="2. Tipos de Variables">
+                            <option value="var_discreta">Variables Discretas</option>
+                            <option value="var_continua">Variables Continuas</option>
+                        </optgroup>
+
+                        <optgroup label="3. Medidas de Tendencia Central">
+                            <option value="media">Media (Promedio)</option>
+                            <option value="mediana">Mediana</option>
+                            <option value="moda">Moda</option>
+                        </optgroup>
+
+                        <optgroup label="4. Medidas de Dispersión">
+                            <option value="rango">Rango</option>
+                            <option value="varianza">Varianza</option>
+                            <option value="desv_std">Desviación Estándar</option>
+                            <option value="coef_var">Coeficiente de Variación</option>
+                        </optgroup>
+
+                        <optgroup label="5. Medias Especiales">
+                            <option value="media_movil">Media Móvil (Orden 3 y 4)</option>
+                            <option value="media_geometrica">Media Geométrica</option>
+                            <option value="media_armonica">Media Armónica</option>
+                        </optgroup>
+
+                        <optgroup label="6. Medidas de Posición">
+                            <option value="cuartiles">Cuartiles</option>
+                            <option value="deciles">Deciles</option>
+                            <option value="percentiles">Percentiles</option>
+                        </optgroup>
+
+                        <optgroup label="7. Distribución de Frecuencias">
+                            <option value="frecuencias">Distribución de Frecuencias</option>
+                        </optgroup>
+
+                        <optgroup label="8. Medidas de Forma">
+                            <option value="curtosis">Curtosis</option>
+                            <option value="asimetria">Asimetría</option>
+                        </optgroup>
+                    </select>
+                    <!-- Selector de Modo (Visible solo para módulos duales como Varianza) -->
+                    <div id="modoVistaContainer" class="hidden mb-8">
+                        <label for="viewMode"
+                            class="block text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3">Modo
+                            de Visualización</label>
+                        <select id="viewMode"
+                            class="w-full md:w-2/3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-md rounded-xl p-4 shadow-sm focus:ring-2 focus:ring-indigo-500">
+                            <option value="detallado">Paso a Paso (Educativo / Tipo Excel)</option>
+                            <option value="resumen">Resumen (Compacto / Profesional)</option>
+                        </select>
+                    </div>
+
+                    <!-- Parámetros Extra dinámicos -->
+                    <div id="extraParams"
+                        class="hidden bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 mb-8 animate-fade-in-up">
+                        <!-- Para muestreo simple, sistemático y conglomerados -->
+                        <div id="paramMuestreo" class="hidden space-y-3">
+                            <label for="paramN"
+                                class="block text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Tamaño
+                                de muestra (n)</label>
+                            <input type="text" id="paramN"
+                                class="w-full md:w-1/2 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl p-3 shadow-sm focus:ring-2 focus:ring-indigo-500"
+                                placeholder="Ej: 3" />
+                        </div>
+
+                        <!-- Para muestreo estratificado -->
+                        <div id="paramMuestreoE" class="hidden space-y-6">
+                            <div class="space-y-3">
+                                <label for="paramEstratos"
+                                    class="block text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Estratos
+                                    (Nombre:Tamaño separados por |)</label>
+                                <input type="text" id="paramEstratos"
+                                    class="w-full bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl p-3 shadow-sm focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="Ej: A:40|B:30|C:30" />
+                            </div>
+                            <div class="space-y-3">
+                                <label for="paramNE"
+                                    class="block text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Muestra
+                                    total (n)</label>
+                                <input type="text" id="paramNE"
+                                    class="w-full md:w-1/2 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl p-3 shadow-sm focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="Ej: 20" />
+                            </div>
+                        </div>
+
+                        <!-- Para Media Móvil -->
+                        <div id="paramMM" class="hidden space-y-3">
+                            <label for="paramOrdenMM"
+                                class="block text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Orden
+                                de la Media Móvil (k)</label>
+                            <select id="paramOrdenMM"
+                                class="w-full md:w-1/2 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl p-3 shadow-sm focus:ring-2 focus:ring-indigo-500">
+                                <option value="3">Orden 3</option>
+                                <option value="4">Orden 4</option>
+                            </select>
+                        </div>
+
+                        <!-- Para Frecuencias y Moda -->
+                        <div id="paramGrafico" class="hidden space-y-3">
+                            <label for="tipoGraficoDinamico"
+                                class="block text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Tipo
+                                de Gráfico</label>
+                            <select id="tipoGraficoDinamico"
+                                class="w-full md:w-1/2 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl p-3 shadow-sm focus:ring-2 focus:ring-indigo-500">
+                                <option value="barras">Histograma (Barras)</option>
+                                <option value="linea">Polígono de Frecuencia (Línea)</option>
+                                <option value="pastel">Circular (Pastel / %)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Zona de Error -->
+                    <div id="errorMsg"
+                        class="hidden mb-6 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-r-xl font-medium"
+                        role="alert"></div>
+
+                    <!-- Botones de Acción -->
+                    <div class="flex flex-wrap gap-4">
+                        <button id="btnCalcular"
+                            class="btn-premium font-bold py-4 px-8 rounded-2xl shadow-lg transition-all flex items-center gap-3">
+                            <span class="text-xl">🔬</span> Calcular y Mostrar Procedimiento
+                        </button>
+                        <button id="btnLimpiar"
+                            class="bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 font-bold py-4 px-8 rounded-2xl shadow-sm transition-all flex items-center gap-3 shadow-sm">
+                            <span class="text-xl">✕</span> Limpiar
+                        </button>
+                    </div>
+        </section>
+
+        <!-- Resultados -->
+        <section id="results" class="hidden space-y-6"></section>
+
+    </div>
+
+    <!-- Script Principal MVC (Módulo) -->
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>
