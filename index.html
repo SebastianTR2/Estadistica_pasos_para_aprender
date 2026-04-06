@@ -24,9 +24,11 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <!-- SheetJS (Excel) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen transition-colors duration-500">
+<body class="font-sans min-h-screen transition-colors duration-500">
 
     <div class="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
 
@@ -42,56 +44,100 @@
             <div class="relative z-10">
                 <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-2">
                     <span class="inline-block align-middle mr-1">📊</span>
-                    <span class="premium-gradient-text align-middle">Tutor de Estadística</span>
+                    <span class="premium-gradient-text align-middle tracking-tighter">Tutor de Estadística</span>
                 </h1>
-                <p class="text-slate-700 dark:text-slate-400 font-medium tracking-wide"> • Aprendizaje Interactivo •
+                <p class="text-slate-700 dark:text-slate-400 font-bold uppercase tracking-[0.3em] text-[10px]">
+                    Aprendizaje Interactivo • Facultad de Ingeniería
                 </p>
             </div>
         </header>
 
-        <!-- Configuración -->
-        <section class="glass-card p-6 md:p-8 animate-fade-in-up">
-            <h2
-                class="text-2xl font-bold flex items-center gap-3 mb-8 text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-4">
-                <span
-                    class="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg text-xl flex items-center justify-center text-indigo-700 dark:text-indigo-300">⚙️</span>
-                Configuración de Datos
-            </h2>
+        <!-- Navegación de Unidades -->
+        <nav class="flex flex-wrap md:flex-nowrap gap-2 p-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-2xl backdrop-blur-md sticky top-4 z-40 border border-white/20 shadow-xl overflow-x-auto no-scrollbar">
+            <button data-unit="1" class="unit-tab active flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap">
+                U1: Estadística Computacional
+            </button>
+            <button data-unit="2" class="unit-tab flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap opacity-60 hover:opacity-100">
+                U2: Teoría de Probabilidades
+            </button>
+            <button data-unit="3" class="unit-tab flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap opacity-60 hover:opacity-100">
+                U3: Unidad 3
+            </button>
+            <button data-unit="4" class="unit-tab flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap opacity-60 hover:opacity-100">
+                U4: Unidad 4
+            </button>
+            <button data-unit="5" class="unit-tab flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap opacity-60 hover:opacity-100">
+                U5: Unidad 5
+            </button>
+        </nav>
 
-            <!-- Fila principal de formulario -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                <!-- Datos Input -->
-                <div class="space-y-3">
-                    <label for="dataInput"
-                        class="block text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Datos
-                        (separados por comas)</label>
-                    <input type="text" id="dataInput" value="4, 7, 13, 2, 1, 8, 5, 3"
-                        class="w-full bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl p-4 text-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
-                        placeholder="Ej: 4, 7, 13, 2, 1, 8, 5, 3" />
-                </div>
+        <main id="mainContent" class="space-y-6">
+            <!-- VISTA UNIDAD 1 -->
+            <div id="view-unidad-1" class="unit-view space-y-6 animate-fade-in">
+                <!-- Configuración -->
+                <section class="glass-card p-6 md:p-8">
+                    <h2 class="text-2xl font-bold flex items-center gap-3 mb-8 text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-4">
+                        <span class="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg text-xl flex items-center justify-center text-indigo-700 dark:text-indigo-300">⚙️</span>
+                        Configuración de Datos
+                    </h2>
 
-                <!-- Selector de Módulo -->
-                <div class="space-y-3">
-                    <label for="moduleSelect"
-                        class="block text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Seleccionar
-                        Módulo</label>
-                    <select id="moduleSelect"
-                        class="w-full bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-md rounded-xl p-4 shadow-sm focus:ring-2 focus:ring-indigo-500">
-                        <option value="">— Selecciona un módulo estadístico —</option>
+                    <!-- Fila principal de formulario -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <!-- Lado Izquierdo: Datos y Excel -->
+                        <div class="flex flex-col">
+                            <!-- Cabecera de Datos -->
+                            <div class="flex items-start justify-between mb-2">
+                                <label for="dataInput" class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-1">DATOS (SEPARADOS POR COMAS)</label>
+                                <div class="flex flex-col items-end gap-1">
+                                    <button id="btnImportarExcel" class="flex items-center gap-1.5 text-[10px] font-black text-indigo-500 hover:text-indigo-400 uppercase tracking-widest transition-colors">
+                                        <span class="text-sm">📂</span> Importar Excel/CSV
+                                    </button>
+                                    <button id="btnAbrirReporte" class="flex items-center gap-1.5 text-[10px] font-black text-slate-400 hover:text-emerald-500 uppercase tracking-widest transition-colors">
+                                        <span class="text-sm">📥</span> Generar Reporte
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="relative mb-6">
+                                <textarea id="dataInput" rows="2"
+                                    class="w-full bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-2xl p-4 text-base font-bold shadow-inner focus:ring-2 focus:ring-indigo-500 transition-all resize-none no-scrollbar uppercase"
+                                    placeholder="Ej: 3572, 1920, 86, 4346, ...">4, 7, 13, 2, 1, 8, 5, 3</textarea>
+                            </div>
+                            
+                            <input type="file" id="excelInput" class="hidden" accept=".xlsx, .xls, .csv" />
 
-                        <optgroup label="1. Muestreo Probabilístico">
-                            <option value="muestreo_simple">Muestreo Aleatorio Simple</option>
-                            <option value="muestreo_sistematico">Muestreo Sistemático</option>
-                            <option value="muestreo_estratificado">Muestreo Estratificado</option>
-                            <option value="muestreo_conglomerados">Muestreo por Conglomerados</option>
-                        </optgroup>
+                            <!-- Contenedor dinámico de selección de columnas -->
+                            <div id="excelColumnSelector" class="hidden mt-4 p-6 bg-indigo-900/10 border border-indigo-400/20 rounded-2xl animate-fade-in-up">
+                                <div class="flex items-center justify-between mb-4">
+                                    <p class="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em]">Archivo detectado: Selecciona una columna</p>
+                                    <button id="btnVerExcel" class="hidden px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 active:scale-95">
+                                        👁️ Abrir Vista Excel
+                                    </button>
+                                </div>
+                                <div id="columnButtons" class="flex flex-wrap gap-2"></div>
+                            </div>
+                        </div>
 
-                        <optgroup label="2. Tipos de Variables">
-                            <option value="var_discreta">Variables Discretas</option>
-                            <option value="var_continua">Variables Continuas</option>
-                        </optgroup>
+                        <!-- Lado Derecho: Selector y Botones -->
+                        <div class="flex flex-col gap-6">
+                            <div class="space-y-3">
+                                <label for="moduleSelect" class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">SELECCIONAR MÓDULO</label>
+                                <select id="moduleSelect" class="w-full bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm font-bold rounded-2xl p-4 shadow-sm focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">— Selecciona un módulo estadístico —</option>
 
-                        <optgroup label="3. Medidas de Tendencia Central">
+                                    <optgroup label="1. Muestreo Probabilístico">
+                                        <option value="muestreo_simple">Muestreo Aleatorio Simple</option>
+                                        <option value="muestreo_sistematico">Muestreo Sistemático</option>
+                                        <option value="muestreo_estratificado">Muestreo Estratificado</option>
+                                        <option value="muestreo_conglomerados">Muestreo por Conglomerados</option>
+                                    </optgroup>
+
+                                    <optgroup label="2. Tipos de Variables">
+                                        <option value="var_discreta">Variables Discretas</option>
+                                        <option value="var_continua">Variables Continuas</option>
+                                    </optgroup>
+
+                                    <optgroup label="3. Medidas de Tendencia Central">
                             <option value="media">Media (Promedio)</option>
                             <option value="mediana">Mediana</option>
                             <option value="moda">Moda</option>
@@ -202,25 +248,259 @@
                         role="alert"></div>
 
                     <!-- Botones de Acción -->
-                    <div class="flex flex-wrap gap-4">
+                    <div class="flex flex-col gap-4">
                         <button id="btnCalcular"
-                            class="btn-premium font-bold py-4 px-8 rounded-2xl shadow-lg transition-all flex items-center gap-3">
-                            <span class="text-xl">🔬</span> Calcular y Mostrar Procedimiento
+                            class="btn-premium w-full font-black py-5 px-8 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-4 group">
+                            <span class="text-2xl group-hover:scale-125 transition-transform">🔬</span> Calcular y Mostrar Procedimiento
                         </button>
                         <button id="btnLimpiar"
-                            class="bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 font-bold py-4 px-8 rounded-2xl shadow-sm transition-all flex items-center gap-3 shadow-sm">
-                            <span class="text-xl">✕</span> Limpiar
+                            class="w-fit px-8 py-3 bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-black rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2 text-[10px] uppercase tracking-widest">
+                            <span class="text-sm">✕</span> Limpiar
                         </button>
                     </div>
-        </section>
+                </section>
 
-        <!-- Resultados -->
-        <section id="results" class="hidden space-y-6"></section>
+                <!-- Resultados -->
+                <section id="results" class="hidden space-y-6"></section>
+            </div>
+
+            <!-- VISTA UNIDADES 2 A 5 (PLACEHOLDERS) -->
+            <div id="view-unidad-2" class="unit-view hidden min-h-[400px] flex items-center justify-center glass-card animate-fade-in">
+                <div class="text-center p-10">
+                    <div class="text-6xl mb-6 grayscale opacity-30">🎲</div>
+                    <h2 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter mb-2">Teoría de Probabilidades</h2>
+                    <p class="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest text-[10px]">Contenido en Desarrollo • Próximamente</p>
+                </div>
+            </div>
+
+            <div id="view-unidad-3" class="unit-view hidden min-h-[400px] flex items-center justify-center glass-card animate-fade-in">
+                <div class="text-center p-10">
+                    <div class="text-6xl mb-6 grayscale opacity-30">📈</div>
+                    <h2 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter mb-2">Unidad Académica 3</h2>
+                    <p class="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest text-[10px]">Contenido en Desarrollo • Próximamente</p>
+                </div>
+            </div>
+
+            <div id="view-unidad-4" class="unit-view hidden min-h-[400px] flex items-center justify-center glass-card animate-fade-in">
+                <div class="text-center p-10">
+                    <div class="text-6xl mb-6 grayscale opacity-30">🧪</div>
+                    <h2 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter mb-2">Unidad Académica 4</h2>
+                    <p class="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest text-[10px]">Contenido en Desarrollo • Próximamente</p>
+                </div>
+            </div>
+
+            <div id="view-unidad-5" class="unit-view hidden min-h-[400px] flex items-center justify-center glass-card animate-fade-in">
+                <div class="text-center p-10">
+                    <div class="text-6xl mb-6 grayscale opacity-30">🔔</div>
+                    <h2 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter mb-2">Unidad Académica 5</h2>
+                    <p class="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest text-[10px]">Contenido en Desarrollo • Próximamente</p>
+                </div>
+            </div>
+        </main>
 
     </div>
 
     <!-- Script Principal MVC (Módulo) -->
     <script type="module" src="js/app.js"></script>
+
+    <!-- Modal para Vista Excel -->
+    <div id="modalExcel" class="hidden fixed inset-0 z-[100] overflow-hidden flex items-center justify-center p-4 md:p-10 animate-fade-in">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" id="closeModalBg"></div>
+        
+        <div class="relative bg-white dark:bg-slate-900 w-full max-w-6xl max-h-full rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.3)] border border-slate-100 dark:border-slate-800 flex flex-col overflow-hidden animate-scale-up">
+            <!-- Header -->
+            <div class="p-6 md:px-10 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+                <div class="flex items-center gap-4">
+                    <span class="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-2xl text-2xl">📋</span>
+                    <div>
+                        <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Vista de Hoja de Cálculo</h3>
+                        <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Haz clic en el encabezado de una columna para seleccionarla</p>
+                    </div>
+                </div>
+                <button id="btnCloseModal" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-400 dark:text-slate-500 text-2xl font-light">✕</button>
+            </div>
+
+            <!-- Body (Tabla Excel) -->
+            <div class="flex-1 overflow-auto p-2 bg-slate-50 dark:bg-black/20" id="modalTableContainer">
+                <!-- Se inyectará la tabla aquí -->
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-end gap-4">
+                 <p class="text-xs text-slate-500 mr-auto flex items-center gap-2">
+                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                     Navega por la tabla para explorar los datos cargados.
+                 </p>
+                 <button id="btnCloseModalFooter" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Configuración de Reporte -->
+    <div id="modalReporte" class="hidden fixed inset-0 z-[110] overflow-hidden flex items-center justify-center p-4 md:p-10 animate-fade-in">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-md transition-opacity" id="closeModalReporteBg"></div>
+        
+        <div class="relative bg-white dark:bg-slate-900 w-full max-w-2xl max-h-full rounded-[2.5rem] shadow-[0_0_80px_rgba(0,0,0,0.5)] border border-white/10 flex flex-col overflow-hidden animate-scale-up">
+            <!-- Header -->
+            <div class="p-8 md:px-12 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-6">
+                    <span class="p-4 bg-emerald-100 dark:bg-emerald-900/50 rounded-2xl text-3xl shadow-inner-premium">📊</span>
+                    <div>
+                        <h3 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Configurar Reporte Final</h3>
+                        <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mt-1">Unidad 1: Estadística Computacional</p>
+                    </div>
+                </div>
+                <button id="btnCloseReporte" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-400 dark:text-slate-500 text-2xl font-light">✕</button>
+            </div>
+
+            <!-- Body -->
+            <div class="flex-1 overflow-auto p-10 space-y-8 no-scrollbar">
+                <!-- Paso 1: Muestreo -->
+                <div class="space-y-4">
+                    <h4 class="text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span> 1. ¿Aplicar Muestreo?
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tipo de Muestreo</label>
+                            <select id="reportSampleType" class="w-full bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm font-bold">
+                                <option value="none">Ninguno (Usar todos los datos)</option>
+                                <option value="simple">Aleatorio Simple</option>
+                                <option value="sistematico">Sistemático (Siguiente c/ k elementos)</option>
+                                <option value="estratificado">Estratificado (Proporcional)</option>
+                                <option value="conglomerados">Muestreo por Conglomerados</option>
+                            </select>
+                        </div>
+                        <div id="reportSampleParams" class="hidden space-y-2">
+                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1" id="reportParamLabel">Tamaño (n)</label>
+                             <input type="number" id="reportParamValue" value="5" class="w-full bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm font-bold" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paso 2: Selección de Módulos -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500"></span> 2. Selecciona los Módulos
+                        </h4>
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                             <input type="checkbox" id="selectAllModules" checked class="w-4 h-4 rounded text-indigo-500 border-slate-300 pointer-events-auto" />
+                             <span class="text-[10px] font-black text-slate-400 group-hover:text-indigo-500 transition-colors uppercase tracking-widest">Seleccionar Todos</span>
+                        </label>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-x-8 gap-y-3 p-6 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <!-- Grupo: Básicos -->
+                        <div class="col-span-2 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1 border-b border-slate-200 dark:border-slate-800 pb-1">Fundamentos y Tendencia</div>
+                        <label class="flex items-center gap-3 p-1 hover:bg-white dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-all">
+                            <input type="checkbox" checked data-module="variables" class="module-check w-4 h-4 rounded text-emerald-500" />
+                            <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Tipo de Variable</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-1 hover:bg-white dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-all">
+                            <input type="checkbox" checked data-module="tendencia" class="module-check w-4 h-4 rounded text-emerald-500" />
+                            <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Tendencia Central</span>
+                        </label>
+
+                        <!-- Grupo: Variabilidad -->
+                        <div class="col-span-2 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-2 mb-1 border-b border-slate-200 dark:border-slate-800 pb-1">Variabilidad y Forma</div>
+                        <label class="flex items-center gap-3 p-1 hover:bg-white dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-all">
+                            <input type="checkbox" checked data-module="dispersion" class="module-check w-4 h-4 rounded text-emerald-500" />
+                            <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Medidas de Dispersión</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-1 hover:bg-white dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-all">
+                            <input type="checkbox" checked data-module="forma" class="module-check w-4 h-4 rounded text-emerald-500" />
+                            <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Sesgo y Curtosis</span>
+                        </label>
+
+                        <!-- Grupo: Avanzado -->
+                        <div class="col-span-2 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-2 mb-1 border-b border-slate-200 dark:border-slate-800 pb-1">Análisis Avanzado</div>
+                        <label class="flex items-center gap-3 p-1 hover:bg-white dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-all">
+                            <input type="checkbox" checked data-module="posicion" class="module-check w-4 h-4 rounded text-emerald-500" />
+                            <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Medidas de Posición</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-1 hover:bg-white dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-all">
+                            <input type="checkbox" checked data-module="medias_especiales" class="module-check w-4 h-4 rounded text-emerald-500" />
+                            <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Medias Especiales</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-1 hover:bg-white dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-all">
+                            <input type="checkbox" checked data-module="frecuencias" class="module-check w-4 h-4 rounded text-emerald-500" />
+                            <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Tablas de Frecuencia</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Paso 3: Pre-visualización -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500"></span> 3. Pre-visualización del Reporte
+                        </h4>
+                        <button id="btnGenerarPreview" class="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-slate-200 dark:border-slate-700 active:scale-95">
+                            <span class="text-sm">👁️</span> Generar Vista Previa
+                        </button>
+                    </div>
+
+                    <!-- Contenedor de la pre-visualización -->
+                    <div id="previewContainer" class="hidden animate-fade-in-up">
+                        <!-- Barra de estado -->
+                        <div class="flex items-center gap-3 mb-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-xl">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
+                            <p class="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">Vista previa generada — así se verá tu archivo Excel</p>
+                            <div id="previewSheetTabs" class="flex gap-1 ml-auto flex-wrap"></div>
+                        </div>
+
+                        <!-- Tabla simulación Excel -->
+                        <div class="relative border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-inner bg-white dark:bg-black/30">
+                            <!-- Encabezado tipo excel -->
+                            <div class="excel-header-bar flex items-center gap-3 px-4 py-2 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">📊 Reporte Principal</span>
+                                <span class="ml-auto text-[10px] text-slate-400"><span id="previewRowCount">—</span> filas × <span id="previewColCount">—</span> columnas</span>
+                            </div>
+
+                            <!-- Tabla scrolleable -->
+                            <div class="overflow-auto max-h-[320px] no-scrollbar">
+                                <table id="previewTable" class="excel-preview-table w-max text-[11px]">
+                                    <thead id="previewTableHead"></thead>
+                                    <tbody id="previewTableBody"></tbody>
+                                </table>
+                            </div>
+
+                            <!-- Overlay de carga -->
+                            <div id="previewLoading" class="hidden absolute inset-0 bg-white/80 dark:bg-black/80 flex items-center justify-center rounded-2xl">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Calculando...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Leyenda de colores -->
+                        <div class="flex flex-wrap gap-3 mt-3">
+                            <span class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400"><span class="w-3 h-3 rounded-sm bg-indigo-200 dark:bg-indigo-800 border border-indigo-300 dark:border-indigo-700 inline-block"></span> Encabezado de sección</span>
+                            <span class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400"><span class="w-3 h-3 rounded-sm bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 inline-block"></span> Encabezado de columna</span>
+                            <span class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400"><span class="w-3 h-3 rounded-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 inline-block"></span> Dato calculado</span>
+                            <span class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400"><span class="w-3 h-3 rounded-sm bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 inline-block"></span> Resultado final</span>
+                        </div>
+                    </div>
+
+                    <!-- Estado vacío -->
+                    <div id="previewEmpty" class="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl">
+                        <span class="text-4xl mb-3 opacity-30">📑</span>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Haz clic en "Generar Vista Previa" para<br>ver cómo quedará el Excel</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-8 border-t border-slate-100 dark:border-slate-800 flex flex-wrap justify-end gap-4 bg-slate-50/50 dark:bg-black/20">
+                <button id="btnCancelReport" class="px-6 py-3 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-slate-600 transition-all">Cancelar</button>
+                <button id="btnExportExcel" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-indigo-500/20 transition-all flex items-center gap-3 active:scale-95">
+                    🚀 Iniciar Procesamiento y Exportación
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

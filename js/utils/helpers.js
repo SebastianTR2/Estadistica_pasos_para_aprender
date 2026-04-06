@@ -4,15 +4,30 @@
 
 export const parseData = (str) => {
     if (!str || !str.trim()) return null;
-    const arr = str.split(',')
-        .map(s => s.trim())
-        .filter(s => s !== '')
-        .map(Number);
+    let arr;
+    if (str.includes(';')) {
+        // Si hay punto y coma: separar por ; y las comas son decimales
+        arr = str.split(';')
+            .map(s => s.trim().replace(',', '.'))
+            .filter(s => s !== '')
+            .map(Number);
+    } else {
+        // Sin punto y coma: separar por coma (formato clásico con punto decimal)
+        arr = str.split(',')
+            .map(s => s.trim())
+            .filter(s => s !== '')
+            .map(Number);
+    }
     if (arr.length === 0 || arr.some(isNaN)) return null;
     return arr;
 };
 
-export const formatDecimals = (n) => isNaN(n) ? 'N/A' : Number(n).toFixed(2);
+// Formatea a 2 decimales con coma decimal y sin ceros extra
+export const formatDecimals = (n) => {
+    if (isNaN(n)) return 'N/A';
+    // Redondea a 2 decimales, quita ceros sobrantes, cambia . por ,
+    return parseFloat(Number(n).toFixed(2)).toString().replace('.', ',');
+};
 
 export const sortAsc = (arr) => [...arr].sort((a, b) => a - b);
 

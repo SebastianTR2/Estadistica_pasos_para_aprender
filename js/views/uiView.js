@@ -57,7 +57,7 @@ export const UIView = {
 
     _renderCore(titulo, configuracion) {
         this.ocultarError();
-        const { concepto, formula, pasos, tablas, resultado, resultadoLabel, datosGrafico, numIntermedios, interpretacionHtml, operacionesGeneralesHtml } = configuracion;
+        const { concepto, formula, formulaHtml: formulaHtmlConfig, pasos, tablas, resultado, resultadoLabel, datosGrafico, numIntermedios, interpretacionHtml, operacionesGeneralesHtml } = configuracion;
 
         let pasosHtml = '';
         if (pasos && pasos.length > 0) {
@@ -103,7 +103,18 @@ export const UIView = {
         }
 
         let formulaHtml = '';
-        if (formula) {
+        if (formulaHtmlConfig) {
+            formulaHtml = `
+                <div class="space-y-4">
+                    <h4 class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-8 h-[1px] bg-slate-200 dark:bg-slate-700"></span> Expresión Matemática
+                    </h4>
+                    <div class="inline-block bg-slate-900 dark:bg-black p-8 rounded-2xl shadow-xl border border-slate-800 dark:border-slate-800/50 relative group overflow-hidden min-w-[200px]">
+                        <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="relative z-10">${formulaHtmlConfig}</div>
+                    </div>
+                </div>`;
+        } else if (formula) {
             formulaHtml = `
                 <div class="space-y-4">
                     <h4 class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
@@ -121,10 +132,17 @@ export const UIView = {
             <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8 relative overflow-hidden">
                 <div class="absolute inset-0 bg-white/10 backdrop-blur-[2px]"></div>
                 <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-                <h3 class="text-3xl font-extrabold text-white flex items-center gap-4 relative z-10 drop-shadow-md">
-                    <span class="p-3 bg-white/20 rounded-2xl backdrop-blur-md">🎯</span> 
-                    ${titulo}
-                </h3>
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                    <h3 class="text-3xl font-extrabold text-white flex items-center gap-4 drop-shadow-md">
+                        <span class="p-3 bg-white/20 rounded-2xl backdrop-blur-md">🎯</span> 
+                        ${titulo}
+                    </h3>
+                    ${formulaHtmlConfig ? `
+                        <div class="bg-black/20 backdrop-blur-md border border-white/10 px-6 py-3 rounded-2xl shadow-inner animate-fade-in">
+                            ${formulaHtmlConfig}
+                        </div>
+                    ` : ''}
+                </div>
             </div>
             
             <div class="p-6 md:p-10 space-y-12">
@@ -204,6 +222,7 @@ export const UIView = {
         this._renderCore(titulo, {
             concepto: resObj.concepto,
             formula: resObj.formula,
+            formulaHtml: resObj.formulaHtml,
             pasos: resObj.detallado.pasos,
             tablas: resObj.detallado.tablas,
             resultado: resObj.resultado,
@@ -226,6 +245,104 @@ export const UIView = {
             interpretacionHtml: resObj.interpretacionHtml,
             operacionesGeneralesHtml: resObj.resumen.operacionesGeneralesHtml,
             datosGrafico: resObj.datosGrafico
+        });
+    },
+
+    /**
+     * Renderiza botones para cada columna encontrada en el Excel/CSV
+     * @param {Object} columnsData Map de { colName: [values] }
+     * @param {Function} onSelect Callback (colName, values)
+     */
+    renderizarSelectorColumnas(columnsData, onSelect) {
+        const container = document.getElementById('excelColumnSelector');
+        const buttonsDiv = document.getElementById('columnButtons');
+        const btnVerExcel = document.getElementById('btnVerExcel');
+        
+        buttonsDiv.innerHTML = '';
+        container.classList.remove('hidden');
+        if (btnVerExcel) btnVerExcel.classList.remove('hidden');
+
+        Object.keys(columnsData).forEach(colName => {
+            const btn = document.createElement('button');
+            btn.className = "px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-indigo-500 hover:text-indigo-600 transition-all shadow-sm flex items-center gap-2 group";
+            
+            const count = columnsData[colName].length;
+            btn.innerHTML = `
+                <span class="w-2 h-2 rounded-full bg-indigo-400 group-hover:bg-indigo-600"></span>
+                ${colName} 
+                <span class="bg-indigo-50 dark:bg-indigo-900/40 text-[10px] px-1.5 py-0.5 rounded text-indigo-600 dark:text-indigo-400 font-medium">${count} datos</span>
+            `;
+            
+            btn.addEventListener('click', () => {
+                // Desmarcar otros
+                Array.from(buttonsDiv.children).forEach(b => b.classList.remove('border-indigo-600', 'ring-2', 'ring-indigo-100'));
+                // Marcar este
+                btn.classList.add('border-indigo-600', 'ring-2', 'ring-indigo-100');
+                
+                onSelect(colName, columnsData[colName]);
+            });
+            
+            
+            buttonsDiv.appendChild(btn);
+        });
+    },
+
+    /**
+     * Renderiza una tabla estilo Excel en el modal
+     * @param {Array} rawData Arreglo de objetos (filas)
+     * @param {Object} columnsData Map de { colName: [values] }
+     * @param {Function} onSelect Callback (colName, values)
+     */
+    renderizarTablaExcel(rawData, columnsData, onSelect) {
+        const container = document.getElementById('modalTableContainer');
+        const columns = Object.keys(rawData[0]);
+        
+        let html = `
+            <table class="min-w-full bg-white dark:bg-slate-900 border-collapse border border-slate-200 dark:border-slate-800 text-xs shadow-sm">
+                <thead>
+                    <tr class="bg-slate-100 dark:bg-slate-800">
+                        <th class="border border-slate-200 dark:border-slate-700 p-2 text-slate-400 w-10">#</th>
+                        ${columns.map(col => `
+                            <th class="border border-slate-200 dark:border-slate-700 p-0 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors cursor-pointer group" data-col="${col}">
+                                <div class="flex flex-col p-3 gap-1">
+                                    <span class="text-[10px] text-indigo-500 font-black uppercase text-center block opacity-50 group-hover:opacity-100">Cargar Columna</span>
+                                    <span class="text-slate-800 dark:text-slate-100 font-bold text-center">${col}</span>
+                                </div>
+                            </th>
+                        `).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rawData.slice(0, 100).map((row, i) => `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                            <td class="border border-slate-200 dark:border-slate-700 p-2 text-center bg-slate-50 dark:bg-slate-800/50 font-mono text-slate-400">${i + 1}</td>
+                            ${columns.map(col => `
+                                <td class="border border-slate-200 dark:border-slate-700 p-2 text-slate-600 dark:text-slate-400">${row[col] !== undefined ? row[col] : ''}</td>
+                            `).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+
+        if (rawData.length > 100) {
+            html += `<div class="p-4 text-center text-slate-500 text-[10px] italic">Mostrando las primeras 100 filas de ${rawData.length}...</div>`;
+        }
+
+        container.innerHTML = html;
+
+        // Añadir eventos a los encabezados
+        container.querySelectorAll('th[data-col]').forEach(th => {
+            th.addEventListener('click', () => {
+                const colName = th.getAttribute('data-col');
+                if (columnsData[colName]) {
+                    onSelect(colName, columnsData[colName]);
+                    
+                    // Efecto de feedback en el modal
+                    th.classList.add('bg-indigo-100', 'dark:bg-indigo-900');
+                    setTimeout(() => th.classList.remove('bg-indigo-100', 'dark:bg-indigo-900'), 500);
+                }
+            });
         });
     }
 };

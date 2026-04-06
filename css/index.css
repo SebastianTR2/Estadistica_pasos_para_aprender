@@ -143,3 +143,175 @@ select option {
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
+
+/* Unit Navigation Tabs */
+.unit-tab {
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.unit-tab.active {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    opacity: 1 !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* ════════════════════════════════════════════════════════════
+   EXCEL PREVIEW TABLE — Spreadsheet Simulation
+   ════════════════════════════════════════════════════════════ */
+.excel-preview-table {
+    border-collapse: collapse;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11px;
+    table-layout: fixed;
+}
+
+/* Row number column (sticky left) */
+.excel-row-header {
+    background: #f1f5f9;
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+    min-width: 34px;
+    padding: 3px 6px;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    z-index: 1;
+}
+.dark .excel-row-header {
+    background: #1e293b;
+    color: #475569;
+    border-color: #334155;
+}
+
+/* Column letter header (A, B, C...) */
+.excel-col-header {
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 800;
+    text-align: center;
+    min-width: 120px;
+    padding: 4px 8px;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 2px solid #cbd5e1;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+.dark .excel-col-header {
+    background: #1e293b;
+    color: #64748b;
+    border-color: #334155;
+}
+
+/* Section title row (bold indigo) */
+.excel-section-header {
+    background: linear-gradient(90deg, #eef2ff, #f0f9ff);
+    color: #3730a3;
+    font-weight: 800;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-bottom: 1px solid #c7d2fe;
+    border-right: 1px solid #e2e8f0;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.dark .excel-section-header {
+    background: linear-gradient(90deg, rgba(67,56,202,0.25), rgba(37,99,235,0.15));
+    color: #818cf8;
+    border-color: rgba(99,102,241,0.3);
+}
+
+/* Column label row (grey header row within a section) */
+.excel-col-label {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+.dark .excel-col-label {
+    background: #1e293b;
+    color: #94a3b8;
+    border-color: #334155;
+}
+
+/* Label cell (row descriptor, first column) */
+.excel-label-cell {
+    color: #334155;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #f1f5f9;
+    white-space: nowrap;
+    background: #fafafa;
+}
+.dark .excel-label-cell {
+    color: #cbd5e1;
+    background: rgba(15,23,42,0.5);
+    border-color: #1e293b;
+}
+
+/* Numeric value cell (green tint) */
+.excel-value-cell {
+    color: #065f46;
+    background: #f0fdf4;
+    font-weight: 700;
+    text-align: right;
+    padding: 3px 12px 3px 6px;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #f1f5f9;
+    font-variant-numeric: tabular-nums;
+}
+.dark .excel-value-cell {
+    color: #6ee7b7;
+    background: rgba(6,78,59,0.2);
+    border-color: #1e293b;
+}
+
+/* Regular data cell */
+.excel-data-cell {
+    color: #1e293b;
+    padding: 3px 10px;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #f1f5f9;
+    white-space: nowrap;
+}
+.dark .excel-data-cell {
+    color: #e2e8f0;
+    border-color: #1e293b;
+}
+
+/* Animate spin (for loading overlay) */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.animate-spin {
+    animation: spin 0.8s linear infinite;
+}
+
