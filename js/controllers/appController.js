@@ -11,6 +11,7 @@ const MODULES_NO_DATA = [
 
 export const AppController = {
     excelData: null, // Guardar datos actuales del archivo
+    bookLibrary: [], // Biblioteca de libros analizados
     currentColumnName: 'Valores', // Nombre de la columna seleccionada
 
     init() {
@@ -46,6 +47,16 @@ export const AppController = {
         document.getElementById('reportSampleType').addEventListener('change', this.actualizarCamposMuestreo.bind(this));
         document.getElementById('btnExportExcel').addEventListener('click', this.iniciarExportacion.bind(this));
         document.getElementById('btnGenerarPreview').addEventListener('click', this.generarPreview.bind(this));
+
+        // Eventos para Unidad 3: Contador de Palabras
+        document.getElementById('btnEscanearLibro').addEventListener('click', this.escanearLibro.bind(this));
+        document.getElementById('btnAgregarBiblioteca').addEventListener('click', this.agregarALaBiblioteca.bind(this));
+        document.getElementById('btnLimpiarLibro').addEventListener('click', this.limpiarLibro.bind(this));
+        document.getElementById('btnCalcularBayes').addEventListener('click', this.calcularBayes.bind(this));
+        document.getElementById('btnCommonWords').addEventListener('click', this.buscarPalabrasEnComun.bind(this));
+        document.getElementById('btnImportarTexto').addEventListener('click', () => document.getElementById('textFileInput').click());
+        document.getElementById('textFileInput').addEventListener('change', this.handleImportTexto.bind(this));
+        document.getElementById('btnExportTreeExcel').addEventListener('click', this.exportarArbolExcel.bind(this));
         
         // Selector 'Seleccionar Todos'
         const selectAll = document.getElementById('selectAllModules');
@@ -833,6 +844,372 @@ export const AppController = {
             UIView.mostrarError(error.message || 'Ocurrió un error (verifica que los parámetros sean correctos).');
             console.error(error);
         }
+    },
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // UNIDAD 3: CONTADOR DE PALABRAS
+    // ─────────────────────────────────────────────────────────────────────────
+    async handleImportTexto(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const area = document.getElementById('bookInput');
+        area.placeholder = "Escaneando contenido... por favor espera. Esto puede tardar si el archivo es grande o es una imagen.";
+        area.value = "";
+
+        try {
+            const extension = file.name.split('.').pop().toLowerCase();
+            let text = "";
+
+            // 1. WORD (.docx)
+            if (extension === 'docx') {
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await mammoth.extractRawText({ arrayBuffer });
+                text = result.value;
+            } 
+            // 2. PDF (.pdf)
+            else if (extension === 'pdf') {
+                const arrayBuffer = await file.arrayBuffer();
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    fullText += content.items.map(item => item.str).join(' ') + '\n';
+                }
+                text = fullText;
+            }
+            // 3. EXCEL / CSV (.xlsx, .xls, .csv)
+            else if (['xlsx', 'xls', 'csv'].includes(extension)) {
+                const arrayBuffer = await file.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer);
+                let fullExcelText = "";
+                workbook.SheetNames.forEach(name => {
+                    const sheet = workbook.Sheets[name];
+                    fullExcelText += XLSX.utils.sheet_to_txt(sheet) + "\n";
+                });
+                text = fullExcelText;
+            }
+            // 4. IMÁGENES (OCR con Tesseract.js)
+            else if (['png', 'jpg', 'jpeg', 'bmp', 'webp'].includes(extension)) {
+                area.placeholder = "Realizando reconocimiento óptico de caracteres (OCR)...";
+                // Usamos español e inglés por defecto para el OCR automático
+                const worker = await Tesseract.createWorker('spa+eng');
+                const ret = await worker.recognize(file);
+                text = ret.data.text;
+                await worker.terminate();
+            }
+            // 5. TXT y FALLBACK UNIVERSAL (Cualquier archivo se intenta leer como texto)
+            else {
+                text = await file.text();
+            }
+
+            if (!text || text.trim().length === 0) {
+                throw new Error('No se detectó contenido de texto legible en este archivo.');
+            }
+
+            area.value = text;
+            area.placeholder = "Pega texto, o sube cualquier archivo (PDF, Word, Excel, Imágenes con texto, TXT...)";
+            area.classList.add('bg-pink-50', 'dark:bg-pink-900/10');
+            setTimeout(() => area.classList.remove('bg-pink-50', 'dark:bg-pink-900/10'), 1000);
+            
+        } catch (err) {
+            console.error(err);
+            area.placeholder = "Error al procesar el archivo.";
+            UIView.mostrarError('Error al procesar el documento: ' + err.message + '. Intenta pegar el texto manualmente.');
+        }
+    },
+
+    escanearLibro() {
+        const text = document.getElementById('bookInput').value;
+        const filterStopWords = document.getElementById('filterStopWords').checked;
+        const caseSensitive = document.getElementById('caseSensitive').checked;
+
+        if (!text || text.trim().length < 10) {
+            alert('Por favor ingresa un texto más largo para analizar.');
+            return;
+        }
+
+        try {
+            const resObj = EstadisticaModel.calcWordFrequency(text, { filterStopWords, caseSensitive });
+            
+            const resultsDiv = document.getElementById('bookResults');
+            resultsDiv.classList.remove('hidden');
+            
+            // Renderizar directamente en el contenedor de la Unidad 3
+            UIView.renderizarResultado('Análisis de Frecuencia (Libro)', resObj, resultsDiv);
+
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        } catch (err) {
+            alert('Error al escanear el libro: ' + err.message);
+        }
+    },
+
+    limpiarLibro() {
+        document.getElementById('bookInput').value = '';
+        document.getElementById('bookResults').innerHTML = '';
+        document.getElementById('bookResults').classList.add('hidden');
+        document.getElementById('textFileInput').value = '';
+    },
+
+    agregarALaBiblioteca() {
+        const text = document.getElementById('bookInput').value;
+        const filterStopWords = document.getElementById('filterStopWords').checked;
+        const caseSensitive = document.getElementById('caseSensitive').checked;
+
+        if (!text || text.trim().length < 50) {
+            alert('El contenido es demasiado corto para añadirlo a la biblioteca.');
+            return;
+        }
+
+        try {
+            const resObj = EstadisticaModel.calcWordFrequency(text, { filterStopWords, caseSensitive });
+            
+            // Crear un nombre por defecto si no hay uno
+            const bookName = `Libro ${this.bookLibrary.length + 1} (${resObj.resultado})`;
+            
+            const newBook = {
+                id: Date.now(),
+                name: bookName,
+                text: text,
+                results: resObj,
+                date: new Date().toLocaleTimeString()
+            };
+
+            this.bookLibrary.push(newBook);
+            this.renderizarBiblioteca();
+            
+            // Feedback
+            document.getElementById('librarySection').classList.remove('hidden');
+            this.limpiarLibro();
+            
+        } catch (err) {
+            alert('Error al procesar para la biblioteca: ' + err.message);
+        }
+    },
+
+    renderizarBiblioteca() {
+        const container = document.getElementById('bookLibrary');
+        container.innerHTML = '';
+
+        if (this.bookLibrary.length === 0) {
+            document.getElementById('librarySection').classList.add('hidden');
+            document.getElementById('bayesSection').classList.add('hidden');
+            return;
+        }
+
+        // Mostrar sección de Bayes si hay al menos 2 libros
+        if (this.bookLibrary.length >= 2) {
+            document.getElementById('bayesSection').classList.remove('hidden');
+        } else {
+            document.getElementById('bayesSection').classList.add('hidden');
+        }
+
+        this.bookLibrary.forEach(book => {
+            const card = document.createElement('div');
+            card.className = 'glass-card p-4 border-l-4 border-pink-500 hover:scale-[1.02] transition-transform cursor-pointer relative group';
+            card.innerHTML = `
+                <div class="flex flex-col gap-1">
+                    <span class="text-[9px] font-black text-pink-500 uppercase tracking-widest">${book.date}</span>
+                    <h4 class="font-bold text-slate-800 dark:text-white truncate pr-6">${book.name}</h4>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                        ${book.results.pasos[1]}
+                    </p>
+                    <div class="mt-3 flex items-center justify-between">
+                        <span class="text-[10px] bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 px-2 py-1 rounded-md font-bold italic">
+                            "${book.results.resultado}"
+                        </span>
+                        <button class="btn-delete text-slate-300 hover:text-red-500 transition-colors" data-id="${book.id}">
+                            <span class="text-sm">🗑️</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Ver resultados al hacer clic
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('.btn-delete')) return;
+                this.verResultadosLibro(book);
+            });
+
+            // Botón eliminar
+            card.querySelector('.btn-delete').addEventListener('click', () => {
+                this.bookLibrary = this.bookLibrary.filter(b => b.id !== book.id);
+                this.renderizarBiblioteca();
+            });
+
+            container.appendChild(card);
+        });
+    },
+
+    verResultadosLibro(book) {
+        const resultsDiv = document.getElementById('bookResults');
+        resultsDiv.classList.remove('hidden');
+        UIView.renderizarResultado(`Resultados: ${book.name}`, book.results, resultsDiv);
+        resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+
+    calcularBayes() {
+        let wordInput = document.getElementById('bayesWord').value.trim();
+        const numLevels = parseInt(document.getElementById('bayesLevels').value) || 1;
+
+        if (this.bookLibrary.length < 2) {
+            alert('Necesitas al menos 2 libros en la biblioteca para realizar una comparación bayesiana.');
+            return;
+        }
+
+        // Determinar qué palabras usar como evidencias
+        let finalWords = [];
+        if (wordInput) {
+            finalWords = wordInput.split(',').map(w => w.trim()).filter(w => w.length > 0);
+        }
+
+        // Si faltan palabras para completar los niveles solicitados, buscamos en común
+        if (finalWords.length < numLevels) {
+            try {
+                const common = EstadisticaModel.findCommonWords(this.bookLibrary);
+                const candidates = common.tablas[0].filas.map(r => r[1]);
+                
+                for (let cand of candidates) {
+                    if (!finalWords.includes(cand)) {
+                        finalWords.push(cand);
+                    }
+                    if (finalWords.length >= numLevels) break;
+                }
+            } catch (err) {
+                // Si no hay palabras en común y no ingresó ninguna, error
+                if (finalWords.length === 0) {
+                    alert('No se encontraron suficientes palabras en común. Por favor ingresa palabras manualmente.');
+                    return;
+                }
+            }
+        }
+
+        // Limitar a los niveles solicitados
+        finalWords = finalWords.slice(0, numLevels);
+        document.getElementById('bayesWord').value = finalWords.join(', ');
+
+        try {
+            const resObj = EstadisticaModel.calcBayes(finalWords.join(','), this.bookLibrary);
+            const container = document.getElementById('bayesResults');
+            container.classList.remove('hidden');
+            
+            UIView.renderizarResultado(`Teorema de Bayes: ${numLevels} Niveles`, resObj, container);
+            
+        } catch (err) {
+            alert('Error en Bayes: ' + err.message);
+        }
+    },
+
+    buscarPalabrasEnComun() {
+        if (this.bookLibrary.length < 2) {
+            alert('Añade al menos 2 libros a la biblioteca para buscar intersecciones.');
+            return;
+        }
+
+        try {
+            const resObj = EstadisticaModel.findCommonWords(this.bookLibrary);
+            const container = document.getElementById('bookResults');
+            container.classList.remove('hidden');
+            
+            UIView.renderizarResultado('Intersección de Palabras entre Documentos', resObj, container);
+            
+            // Sugerencia: autocompletar el campo de Bayes con la palabra más común
+            if (resObj.tablas[0].filas.length > 0) {
+                document.getElementById('bayesWord').value = resObj.tablas[0].filas[0][1];
+            }
+            
+        } catch (err) {
+            alert('Intersección: ' + err.message);
+        }
+    },
+
+    exportarArbolExcel() {
+        const datos = UIView.lastBayesData;
+        if (!datos) {
+            alert('Primero realiza un cálculo de Bayes para exportar.');
+            return;
+        }
+
+        const wb = XLSX.utils.book_new();
+        const evidencias = datos.evidencias;
+        const raiz = datos.raiz; // Cada elemento es un libro
+
+        // --- TABLA 1: FRECUENCIAS Y PROBABILIDADES INDIVIDUALES ---
+        const rowsFreq = [];
+        // Encabezados
+        const header1 = ['Palabras_marcadas'];
+        raiz.forEach((l, i) => header1.push(`Bloque_${i+1}`));
+        raiz.forEach((l, i) => header1.push(`TOTAL_Palabras_Bloque_${i+1}`));
+        raiz.forEach((l, i) => header1.push(`P(W|Bloque_${i+1})`));
+        rowsFreq.push(header1);
+
+        // Datos por palabra
+        evidencias.forEach(word => {
+            const row = [word];
+            // Frecuencias
+            raiz.forEach(libro => {
+                // Buscamos en la biblioteca el conteo real
+                const bookInfo = this.bookLibrary.find(b => b.name === libro.nombre);
+                const count = bookInfo ? (bookInfo.results.mapaFrecuencias[word] || 0) : 0;
+                row.push(count);
+            });
+            // Totales del bloque
+            raiz.forEach(libro => {
+                const bookInfo = this.bookLibrary.find(b => b.name === libro.nombre);
+                row.push(bookInfo ? bookInfo.results.totalPalabras : 0);
+            });
+            // Probabilidades individuales
+            raiz.forEach(libro => {
+                const bookInfo = this.bookLibrary.find(b => b.name === libro.nombre);
+                const prob = bookInfo ? ((bookInfo.results.mapaFrecuencias[word] || 0) / bookInfo.results.totalPalabras) : 0;
+                row.push(prob);
+            });
+            rowsFreq.push(row);
+        });
+
+        const wsFreq = XLSX.utils.aoa_to_sheet(rowsFreq);
+
+        // --- TABLA 2: ANÁLISIS BAYESIANO E INTERSECCIONES ---
+        const rowsBayes = [];
+        const header2 = ['Palabras_unicas'];
+        raiz.forEach((l, i) => header2.push(`Intersección_Camino_${i+1}`));
+        header2.push('TOTAL_BLOQUES_GANADOR');
+        rowsBayes.push(header2);
+
+        // Filas de intersección (Caminos recorridos)
+        // En Bayes Secuencial, la intersección final es el producto de prior * likelihoods
+        const rowInter = ['(Todas las evidencias)'];
+        let maxInter = 0;
+        raiz.forEach(libro => {
+            const val = libro.producto || 0;
+            rowInter.push(val);
+            if (val > maxInter) maxInter = val;
+        });
+        rowInter.push(maxInter);
+        rowsBayes.push(rowInter);
+
+        // Añadir detalle por palabra si es posible
+        evidencias.forEach((word, idx) => {
+            const rowW = [word];
+            raiz.forEach(libro => {
+                // Buscamos el nodo correspondiente en el árbol
+                let node = libro.hijos ? libro.hijos.find(h => h.nombre.includes(word)) : null;
+                rowW.push(node ? node.probCondicional : 0);
+            });
+            rowsBayes.push(rowW);
+        });
+
+        const wsBayes = XLSX.utils.aoa_to_sheet(rowsBayes);
+
+        // Añadir hojas
+        XLSX.utils.book_append_sheet(wb, wsFreq, "Frecuencias_y_Caminos");
+        XLSX.utils.book_append_sheet(wb, wsBayes, "Análisis_Bayesiano");
+
+        // Descargar
+        XLSX.writeFile(wb, `Reporte_Estadistico_Bayes_${new Date().getTime()}.xlsx`);
     }
 };
 

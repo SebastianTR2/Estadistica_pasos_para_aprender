@@ -1158,12 +1158,6 @@ export const EstadisticaModel = {
             resultadoLabel: tipo,
 
             resultadosIntermedios: {
-                media: formatDecimals(xbar),
-                mediana: formatDecimals(med),
-                sigma: formatDecimals(sigma),
-                sigma3: formatDecimals(sigma3),
-                sumaCubos: formatDecimals(sumPotencias3),
-                fisher: formatDecimals(g1),
                 pearson: formatDecimals(pearson)
             },
 
@@ -1197,18 +1191,14 @@ export const EstadisticaModel = {
 
     // ── FRECUENCIAS AGRUPADAS ─────────────────────────────
     calcFrecuenciasAgrupadas(data) {
+        const sortAsc = (arr) => [...arr].sort((a, b) => a - b);
         const s = sortAsc(data);
         const n = s.length;
         const min = s[0];
         const max = s[n - 1];
         const R = max - min;
-        
-        // Sturges: REDONDEAR (≥0,50 sube, <0,50 baja)
         const k = Math.round(1 + 3.322 * Math.log10(n));
-        // Amplitud: REDONDEAR
         const A_rounded = Math.round(R / k) || 1;
-
-        // Formato limpio: sin ceros innecesarios, con coma decimal
         const cln = v => parseFloat(Number(v).toFixed(2)).toString().replace('.', ',');
 
         let Fi_acum = 0;
@@ -1216,10 +1206,8 @@ export const EstadisticaModel = {
         const filas = [];
         
         for (let i = 0; i < k; i++) {
-            // Límites redondeados a 2 decimales para evitar errores de flotante
             const Li = Math.round((min + i * A_rounded) * 100) / 100;
             const Ls = Math.round((Li + A_rounded) * 100) / 100;
-            
             const fi = data.filter(d => (i === k - 1) ? (d >= Li && d <= Ls) : (d >= Li && d < Ls)).length;
             Fi_acum += fi;
             const fri = fi / n;
@@ -1230,12 +1218,11 @@ export const EstadisticaModel = {
                 cln(Li),
                 cln(Ls),
                 fi.toString(),
-                fi.toString(),
-                formatDecimals(fri),
+                parseFloat(fri.toFixed(4)).toString().replace('.', ','),
                 Fi_acum.toString(),
-                formatDecimals(Fri_acum),
-                formatDecimals(fri * 100) + '%',
-                formatDecimals(Fri_acum * 100) + '%',
+                parseFloat(Fri_acum.toFixed(4)).toString().replace('.', ','),
+                (fri * 100).toFixed(2).replace('.', ',') + '%',
+                (Fri_acum * 100).toFixed(2).replace('.', ',') + '%',
                 `${cln(Li)} - ${cln(Ls)}`,
                 fi.toString()
             ]);
@@ -1243,8 +1230,281 @@ export const EstadisticaModel = {
 
         return {
             n, min, max, R, k, A: A_rounded,
-            encabezados: ['Clase', 'Límite inferior', 'Límite superior', 'fi', 'fi', 'fri', 'FI', 'FRI', '%', '% Acum', 'INTERVALO', 'fi'],
+            encabezados: ['Clase', 'Límite inferior', 'Límite superior', 'fi', 'fri', 'FI', 'FRI', '%', '% Acum', 'INTERVALO', 'fi'],
             filas
+        };
+    },
+
+    // ── UNIDAD 3: CONTADOR DE PALABRAS ────────────────────
+    calcWordFrequency(text, options = { filterStopWords: true, caseSensitive: false }) {
+        if (!text || text.trim().length === 0) throw new Error('El texto está vacío.');
+
+        let processedText = text;
+        if (!options.caseSensitive) processedText = processedText.toLowerCase();
+        processedText = processedText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()\"\'\?¡¿]/g, " ");
+        let words = processedText.split(/\s+/).filter(w => w.length > 1);
+
+        if (options.filterStopWords) {
+            const universalStopWords = new Set([
+                "el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del", "al", "a", "ante", "bajo", "cabe", "con", "contra", "desde", "durante", "en", "entre", "hacia", "hasta", "mediante", "para", "por", "segun", "sin", "so", "sobre", "tras", "versus", "via", "y", "e", "o", "u", "pero", "mas", "sino", "aunque", "porque", "pues", "que", "si", "cuando", "donde", "como", "quien", "cual", "cuyo", "yo", "tu", "el", "ella", "ello", "nosotros", "nosotras", "vosotros", "vosotras", "ellos", "ellas", "mi", "tu", "su", "nuestro", "vuestro", "me", "te", "se", "nos", "os", "lo", "la", "le", "los", "las", "les", "este", "esta", "esto", "ese", "esa", "eso", "aquel", "aquella", "aquello", "estos", "estas", "esos", "esas", "aquellos", "aquellas", "mio", "tuyo", "suyo", "alguno", "ninguno", "otro", "todo", "poco", "mucho", "demasiado", "bastante", "ser", "estar", "haber", "hacer", "tener", "poder", "querer", "decir", "ir", "ver", "dar", "saber", "venir", "parecer", "llegar", "pasar", "creer", "deber", "dejar", "parecer", "hablar", "querer", "llevar", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "primero", "segundo", "tercero", "bueno", "malo", "bien", "mal", "si", "no", "mas", "menos", "muy", "tan", "aun", "solo", "ya", "ahora", "luego", "despues", "ayer", "hoy", "mañana", "aqui", "alli", "alla", "cerca", "lejos", "arriba", "abajo", "dentro", "fuera", "cada", "quien", "quienes", "cuales", "cuanto", "cuanta", "cuantos", "cuantas",
+                "the", "and", "or", "but", "if", "while", "as", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "can", "will", "just", "should", "now", "i", "you", "he", "she", "it", "we", "they", "my", "your", "his", "her", "its", "our", "their", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did", "of", "to", "in", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once"
+            ]);
+            words = words.filter(w => !universalStopWords.has(w.toLowerCase()) && w.length > 2);
+        }
+
+        // 3. Conteo de frecuencias
+        const freqMap = {};
+        words.forEach(w => {
+            freqMap[w] = (freqMap[w] || 0) + 1;
+        });
+
+        // 4. Ordenar por frecuencia descendente
+        const sortedWords = Object.entries(freqMap)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 50); // Tomamos las 50 más frecuentes
+
+        const labels = sortedWords.map(sw => sw[0]);
+        const dataValues = sortedWords.map(sw => sw[1]);
+
+        // 5. Preparar filas de tabla
+        const totalWords = words.length;
+        const rows = sortedWords.map(([word, freq], i) => {
+            const prob = (freq / totalWords);
+            const formatDecimals = (n) => parseFloat(Number(n).toFixed(4)).toString().replace('.', ',');
+            return [
+                (i + 1).toString(),
+                word,
+                freq.toString(),
+                formatDecimals(prob),
+                `${(prob * 100).toFixed(2).replace('.', ',')}%`
+            ];
+        });
+
+        return {
+            concepto: 'El análisis de frecuencia de palabras es una técnica estadística que permite identificar los términos más representativos de un corpus textual (como un libro). En estadística, esto representa una distribución de frecuencia discreta.',
+            formula: 'P(palabra) = f / N',
+            pasos: [
+                `Texto procesado: ${text.length} caracteres encontrados.`,
+                `Total de palabras analizadas (post-limpieza): **${totalWords}**`,
+                `Se eliminaron signos de puntuación y se normalizó el texto.`,
+                options.filterStopWords ? `Se filtraron palabras comunes (conectores, preposiciones, artículos).` : `Se incluyeron todas las palabras.`,
+                `Se calculó la frecuencia absoluta (f) y la probabilidad relativa (f/N) para cada término.`
+            ],
+            tablas: [{
+                titulo: 'Top 50 Palabras Más Frecuentes',
+                encabezados: ['#', 'Palabra', 'Frecuencia (f)', 'Probabilidad (P)', '%'],
+                filas: rows
+            }],
+            resultado: sortedWords.length > 0 ? sortedWords[0][0] : 'N/A',
+            resultadoLabel: `Palabra más frecuente: "${sortedWords.length > 0 ? sortedWords[0][0] : 'N/A'}" con f=${sortedWords.length > 0 ? sortedWords[0][1] : 0}`,
+            totalPalabras: totalWords,
+            mapaFrecuencias: freqMap, // Corregido: freqMap es la variable correcta
+            datosGrafico: {
+                type: 'bar',
+                labels: labels.slice(0, 15), // Mostrar solo top 15 en el gráfico
+                data: dataValues.slice(0, 15),
+                label: 'Frecuencia de Aparición'
+            }
+        };
+    },
+
+    // ── UNIDAD 3: TEOREMA DE BAYES (N NIVELES) ────────────────────
+    calcBayes(targetWordsStr, library) {
+        if (!library || library.length === 0) throw new Error('La biblioteca está vacía.');
+        if (!targetWordsStr) throw new Error('Debes ingresar al menos una palabra.');
+
+        const targetWords = targetWordsStr.split(',').map(w => w.trim().toLowerCase()).filter(w => w.length > 0);
+        if (targetWords.length === 0) throw new Error('Ingresa palabras válidas.');
+
+        const LAPLACE = 0.000001;
+        const formatDec = (n) => parseFloat(Number(n).toFixed(6)).toString().replace('.', ',');
+        const formatPct = (n) => (n * 100).toFixed(2).replace('.', ',') + '%';
+
+        // 1. Preparar Likelihoods para cada palabra en cada libro
+        const likelihoodsByBook = library.map(doc => {
+            const rows = doc.results.tablas[0].filas;
+            const totalWords = parseInt(doc.results.pasos[1].match(/\d+/)[0]);
+            
+            const probs = {};
+            targetWords.forEach(word => {
+                const row = rows.find(r => r[1].toLowerCase() === word);
+                const freq = row ? parseInt(row[2]) : 0;
+                probs[word] = (freq + LAPLACE) / totalWords;
+            });
+
+            return {
+                id: doc.id,
+                name: doc.name,
+                probs: probs,
+                prior: 1 / library.length
+            };
+        });
+
+        // 2. Construir datos del árbol de N niveles
+        // Estructura: Raíz -> [Libros] -> [Palabra 1 | No Palabra 1] -> [Palabra 2 | No Palabra 2] ...
+        const buildTreeData = (currentPrior, wordIndex, bookData) => {
+            if (wordIndex >= targetWords.length) return null;
+
+            const word = targetWords[wordIndex];
+            const pW = bookData.probs[word];
+            const pNoW = 1 - pW;
+
+            return [
+                {
+                    nombre: `"${word}"`,
+                    probCondicional: pW,
+                    priorAcum: currentPrior,
+                    producto: currentPrior * pW,
+                    hijos: buildTreeData(currentPrior * pW, wordIndex + 1, bookData)
+                },
+                {
+                    nombre: `no "${word}"`,
+                    probCondicional: pNoW,
+                    priorAcum: currentPrior,
+                    producto: currentPrior * pNoW,
+                    hijos: buildTreeData(currentPrior * pNoW, wordIndex + 1, bookData)
+                }
+            ];
+        };
+
+        const treeRoot = likelihoodsByBook.map(book => ({
+            nombre: book.name,
+            probCondicional: book.prior,
+            priorAcum: 1,
+            producto: book.prior,
+            hijos: buildTreeData(book.prior, 0, book)
+        }));
+
+        // 3. Calcular Resultados Finales (Probabilidad de que TODAS las palabras aparezcan)
+        // P(D | W1, W2, ...) = [P(W1|D)*P(W2|D)*...*P(D)] / P(W1, W2, ...)
+        const results = likelihoodsByBook.map(book => {
+            const jointLikelihood = targetWords.reduce((acc, word) => acc * book.probs[word], 1);
+            return {
+                name: book.name,
+                prior: book.prior,
+                jointLikelihood: jointLikelihood,
+                numerator: jointLikelihood * book.prior
+            };
+        });
+
+        const totalEvidence = results.reduce((sum, r) => sum + r.numerator, 0);
+        const posteriors = results.map(r => ({
+            docName: r.name,
+            prior: r.prior,
+            likelihood: r.jointLikelihood,
+            posterior: r.numerator / totalEvidence
+        })).sort((a, b) => b.posterior - a.posterior);
+
+        const tableRows = posteriors.map((p, i) => {
+            const bookInfo = library.find(b => b.name === p.docName);
+            const freq = targetWords.reduce((sum, w) => sum + (bookInfo.results.mapaFrecuencias[w.toLowerCase()] || 0), 0);
+            const totalN = bookInfo.results.totalPalabras;
+            
+            // Determinamos el índice original del libro para el "Camino N"
+            const originalIndex = library.findIndex(b => b.name === p.docName) + 1;
+
+            return [
+                p.docName,
+                targetWords.join(' ∩ '),
+                freq.toString(),
+                totalN.toString(),
+                formatDec(p.likelihood),
+                `1/${library.length}`,
+                `${formatDec(p.prior * p.likelihood)} (Camino ${originalIndex})`,
+                `**${formatPct(p.posterior)}**`
+            ];
+        });
+
+        return {
+            concepto: `Análisis de Bayes Secuencial para ${targetWords.length} evidencias combinadas.`,
+            formula: 'P(D|E) = P(D ∩ E) / P(E)',
+            pasos: [
+                `Evidencias combinadas (E): **${targetWords.join(' ∩ ')}**`,
+                `Fórmula aplicada: **P(D|E) = P(D ∩ E) / P(E)**`,
+                `Probabilidad Total de la Evidencia P(E): **${formatDec(totalEvidence)}**`,
+                `Intersección P(D ∩ E): **${formatDec(results[0].numerator)}**`,
+                `El árbol muestra todas las trayectorias de intersección posibles.`
+            ],
+            tablas: [{
+                titulo: `Clasificación para: ${targetWords.join(' + ')}`,
+                encabezados: ['Bloque', 'Evidencias', 'f (frecuencia)', 'N (total de palabras)', 'f/N', 'Prior (1/k)', 'Intersección P(∩)', 'Resultado (%)'],
+                filas: tableRows
+            }],
+            resultado: posteriors[0].docName,
+            resultadoLabel: `Clasificación combinada: El texto pertenece a **${posteriors[0].docName}** con ${formatPct(posteriors[0].posterior)} de confianza.`,
+            datosArbol: {
+                niveles: targetWords.length + 1,
+                evidencias: targetWords,
+                raiz: treeRoot,
+                probTotal: totalEvidence
+            }
+        };
+    },
+
+    findCommonWords(library) {
+        if (!library || library.length < 2) throw new Error('Se necesitan al menos 2 libros para encontrar palabras en común.');
+
+        // 1. Obtener los sets de palabras de cada libro (del Top 50 guardado)
+        const documentWordSets = library.map(doc => {
+            const rows = doc.results.tablas[0].filas;
+            return {
+                name: doc.name,
+                words: rows.map(r => r[1].toLowerCase())
+            };
+        });
+
+        // 2. Intersección: palabras que están en TODOS los libros
+        let commonWords = documentWordSets[0].words;
+        for (let i = 1; i < documentWordSets.length; i++) {
+            commonWords = commonWords.filter(w => documentWordSets[i].words.includes(w));
+        }
+
+        if (commonWords.length === 0) {
+            throw new Error('No se encontraron palabras en común entre los documentos seleccionados (basado en el Top 50).');
+        }
+
+        // 3. Preparar resultados con estadísticas promedio
+        const results = commonWords.map(word => {
+            let totalFreq = 0;
+            let totalProb = 0;
+            
+            library.forEach(doc => {
+                const row = doc.results.tablas[0].filas.find(r => r[1].toLowerCase() === word);
+                totalFreq += parseInt(row[2]);
+                totalProb += parseFloat(row[3].replace(',', '.'));
+            });
+
+            return {
+                palabra: word,
+                freqPromedio: (totalFreq / library.length).toFixed(2),
+                probPromedio: (totalProb / library.length).toFixed(4)
+            };
+        });
+
+        // Ordenar por relevancia (probabilidad promedio)
+        results.sort((a, b) => b.probPromedio - a.probPromedio);
+
+        return {
+            concepto: 'La intersección de palabras identifica los términos que aparecen con alta frecuencia en todos los documentos analizados. Estos términos son los candidatos ideales para realizar ejercicios de clasificación bayesiana.',
+            formula: 'C = D1 ∩ D2 ∩ ... ∩ Dn',
+            pasos: [
+                `Se analizaron **${library.length}** documentos.`,
+                `Se buscaron coincidencias en el Top 50 de cada libro.`,
+                `Se encontraron **${commonWords.length}** palabras compartidas por todas las fuentes.`
+            ],
+            tablas: [{
+                titulo: 'Palabras en Común (Candidatos Bayes)',
+                encabezados: ['#', 'Palabra', 'Freq. Promedio', 'Prob. Promedio'],
+                filas: results.map((r, i) => [(i + 1).toString(), r.palabra, r.freqPromedio, r.probPromedio])
+            }],
+            resultado: commonWords.join(', '),
+            resultadoLabel: `Total: ${commonWords.length} palabras comunes encontradas.`,
+            datosGrafico: {
+                type: 'bar',
+                labels: results.slice(0, 10).map(r => r.palabra),
+                data: results.slice(0, 10).map(r => r.probPromedio),
+                label: 'Probabilidad Promedio'
+            }
         };
     }
 };

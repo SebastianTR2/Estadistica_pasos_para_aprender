@@ -84,6 +84,23 @@ body {
     transform: scale(0.98);
 }
 
+.btn-premium-pink {
+    background: linear-gradient(135deg, #db2777 0%, #be185d 50%, #9d174d 100%);
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(219, 39, 119, 0.4);
+}
+
+.btn-premium-pink:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(219, 39, 119, 0.5);
+    filter: brightness(1.1);
+}
+
+.btn-premium-pink:active {
+    transform: scale(0.98);
+}
+
 /* Form Styles */
 input, select {
     border: 1px solid #e2e8f0;
@@ -307,7 +324,131 @@ select option {
     border-color: #1e293b;
 }
 
-/* Animate spin (for loading overlay) */
+/* ════════════════════════════════════════════════════════════
+   TRUE BAYES TREE ENGINE (HORIZONTAL BRANCHING)
+   ════════════════════════════════════════════════════════════ */
+.bayes-tree-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    padding: 3rem;
+    min-width: max-content;
+}
+
+.tree-level {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.5rem;
+    position: relative;
+    padding-left: 80px; /* Espacio para las ramas */
+}
+
+.tree-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    flex: 1;
+}
+
+/* Línea horizontal principal que llega al nodo */
+.tree-item::before {
+    content: '';
+    position: absolute;
+    left: -80px;
+    top: 50%;
+    width: 80px;
+    height: 2px;
+    background: #6366f1;
+    opacity: 0.3;
+}
+
+/* Línea vertical que conecta hermanos en el origen */
+.tree-level::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #6366f1;
+    opacity: 0.3;
+    margin: auto 0;
+    /* La altura se ajusta según el contenido de los hijos */
+    height: calc(100% - 3rem); 
+}
+
+/* Ocultar líneas excedentes del primer y último nivel */
+.tree-level:only-child::before {
+    display: none;
+}
+
+.tree-node-box {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+}
+
+.tree-label {
+    background: white;
+    border: 2px solid #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    color: #1e293b;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    white-space: nowrap;
+    z-index: 20;
+}
+
+.dark .tree-label {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+.tree-prob-tag {
+    position: absolute;
+    left: -65px;
+    top: calc(50% - 22px);
+    font-size: 10px;
+    font-weight: 900;
+    color: #4f46e5;
+    background: #f5f3ff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #ddd6fe;
+    z-index: 30;
+}
+
+.dark .tree-prob-tag {
+    background: #2e1065;
+    color: #a5b4fc;
+    border-color: #4c1d95;
+}
+
+.branch-negative {
+    opacity: 0.4;
+    filter: grayscale(0.8);
+}
+.branch-negative:hover {
+    opacity: 1;
+    filter: grayscale(0);
+}
+
+.final-result-tag {
+    margin-left: 12px;
+    font-size: 9px;
+    font-weight: 900;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px dashed rgba(99, 102, 241, 0.4);
+    white-space: nowrap;
+}
+
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
@@ -315,3 +456,61 @@ select option {
     animation: spin 0.8s linear infinite;
 }
 
+.bayes-tree-compact:hover .scale-50 {
+    transform: scale(0.55);
+    opacity: 0.8;
+}
+
+@keyframes scale-up {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.animate-scale-up {
+    animation: scale-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+/* Estilos para exportación a PDF */
+.pdf-printing {
+    background: white !important;
+    color: black !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.pdf-printing .tree-label {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    font-size: 10px !important;
+    padding: 5px 10px !important;
+}
+
+.pdf-printing .tree-prob {
+    font-size: 8px !important;
+    background: white !important;
+    border: 1px solid #ccc !important;
+    color: #000 !important;
+}
+
+.pdf-printing .tree-branch::before,
+.pdf-printing .tree-node > .flex::before {
+    background: #000 !important;
+    opacity: 0.3 !important;
+}
+
+.pdf-printing .bg-indigo-600 {
+    background-color: #4f46e5 !important;
+    color: white !important;
+}
+
+.pdf-printing .text-indigo-500 {
+    color: #4f46e5 !important;
+}

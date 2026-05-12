@@ -55,9 +55,14 @@ export const UIView = {
         return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>');
     },
 
-    _renderCore(titulo, configuracion) {
+    lastBayesData: null,
+
+    _renderCore(titulo, configuracion, customContainer = null) {
+        const targetContainer = customContainer || resultsSection;
         this.ocultarError();
-        const { concepto, formula, formulaHtml: formulaHtmlConfig, pasos, tablas, resultado, resultadoLabel, datosGrafico, numIntermedios, interpretacionHtml, operacionesGeneralesHtml } = configuracion;
+        const { concepto, formula, formulaHtml: formulaHtmlConfig, pasos, tablas, resultado, resultadoLabel, datosGrafico, numIntermedios, interpretacionHtml, operacionesGeneralesHtml, datosArbol } = configuracion;
+        
+        if (datosArbol) this.lastBayesData = datosArbol;
 
         let pasosHtml = '';
         if (pasos && pasos.length > 0) {
@@ -127,6 +132,48 @@ export const UIView = {
                 </div>`;
         }
 
+        let arbolHtml = '';
+        if (datosArbol) {
+            const format = (n) => parseFloat(n.toFixed(5)).toString().replace('.', ',');
+            
+            arbolHtml = `
+            <div class="mt-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h4 class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-4 h-4 bg-indigo-500 rounded-full"></span>
+                        Previsualización del Árbol (${datosArbol.niveles - 1} niveles)
+                    </h4>
+                    <button id="btnExpandTree" class="px-4 py-2 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-500 transition-all shadow-lg flex items-center gap-2">
+                        <span>🔍</span> Vista Completa (Ordenado)
+                    </button>
+                </div>
+                
+                <!-- Vista Compacta (Scrollable y pequeña) -->
+                <div class="bayes-tree-compact relative bg-slate-50 dark:bg-black/20 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-4 h-[250px] overflow-hidden group cursor-pointer" id="compactTreePreview">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-50 dark:from-slate-900 to-transparent z-20 pointer-events-none group-hover:opacity-0 transition-opacity"></div>
+                    <div class="scale-[0.5] origin-top-left pointer-events-none opacity-40 group-hover:opacity-100 transition-opacity">
+                        <div class="flex items-center gap-12">
+                            <div class="tree-label bg-indigo-600 !text-white border-none shadow-lg">Espacio Muestral</div>
+                            <div class="flex flex-col gap-20">
+                                ${datosArbol.raiz.map(libro => `
+                                    <div class="tree-node">
+                                        <div class="tree-branch"><div class="tree-label font-black">${libro.nombre}</div></div>
+                                        <div class="ml-12 border-l-2 border-slate-200 pl-12 py-4">
+                                            <div class="tree-label">... niveles ocultos ...</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="absolute inset-0 flex items-center justify-center z-30">
+                        <span class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-6 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 font-black text-[10px] uppercase tracking-widest text-indigo-600 shadow-xl group-hover:scale-110 transition-transform">Ver Árbol Completo</span>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
         const html = `
         <div class="glass-card overflow-hidden animate-fade-in-up dark:bg-slate-900/80">
             <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8 relative overflow-hidden">
@@ -167,12 +214,17 @@ export const UIView = {
 
                 ${tablasHtml}
 
-                <!-- Gráfico Chart.js -->
-                <div id="chartContainer" class="hidden w-full max-w-3xl mx-auto mt-12 mb-6 p-6 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-premium">
-                    <div class="chart-container-premium">
-                        <canvas id="mainChart"></canvas>
+                ${(arbolHtml || datosGrafico) ? `
+                <div class="p-8 space-y-10">
+                    ${arbolHtml}
+                    
+                    <div id="chartContainer" class="hidden w-full max-w-3xl mx-auto mt-12 mb-6 p-6 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-premium">
+                        <div class="chart-container-premium">
+                            <canvas id="mainChart"></canvas>
+                        </div>
                     </div>
                 </div>
+                ` : ''}
 
                 <!-- Resultado Final -->
                 <div class="mt-12 p-1 bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 rounded-[2.5rem] shadow-2xl animate-pulse-subtle">
@@ -192,21 +244,163 @@ export const UIView = {
         </div>
         `;
 
-        resultsSection.innerHTML = html;
-        resultsSection.classList.remove('hidden');
-        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        targetContainer.innerHTML = html;
+        targetContainer.classList.remove('hidden');
+        targetContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         // Chart
         if (datosGrafico) {
-            const canvas = document.getElementById('mainChart');
+            const canvas = targetContainer.querySelector('#mainChart');
             ChartView.renderChart(canvas, datosGrafico);
-            document.getElementById('chartContainer').classList.remove('hidden');
+            targetContainer.querySelector('#chartContainer').classList.remove('hidden');
         } else {
             ChartView.clearChart();
         }
+
+        // Listener para expandir árbol
+        const btnExpand = targetContainer.querySelector('#btnExpandTree');
+        const preview = targetContainer.querySelector('#compactTreePreview');
+        if (btnExpand) btnExpand.onclick = () => this.abrirModalArbol();
+        if (preview) preview.onclick = () => this.abrirModalArbol();
     },
 
-    renderizarResultado(titulo, resObj) {
+    abrirModalArbol() {
+        const modal = document.getElementById('treeModal');
+        const content = document.getElementById('treeModalContent');
+        const datos = this.lastBayesData;
+        if (!datos) return;
+
+        const format = (n) => parseFloat(n.toFixed(5)).toString().replace('.', ',');
+        const renderRecursive = (nodes, level) => {
+            if (!nodes || nodes.length === 0) return '';
+            return `
+            <div class="tree-level">
+                ${nodes.map(node => {
+                    const isNegative = node.nombre.toLowerCase().startsWith('no "');
+                    return `
+                    <div class="tree-item ${isNegative ? 'branch-negative' : ''}">
+                        <div class="tree-node-box">
+                            <span class="tree-prob-tag">P=${format(node.probCondicional)}</span>
+                            <div class="tree-label shadow-xl">${node.nombre}</div>
+                            ${!node.hijos ? `<div class="final-result-tag">Intersección P(∩)=${format(node.producto)}</div>` : ''}
+                        </div>
+                        ${renderRecursive(node.hijos, level + 1)}
+                    </div>
+                    `;
+                }).join('')}
+            </div>`;
+        };
+
+        content.innerHTML = `
+            <div class="bayes-tree-wrapper">
+                <div class="tree-item">
+                    <div class="tree-node-box">
+                        <div class="tree-label bg-indigo-600 !text-white border-none shadow-2xl !p-5 !text-base font-black uppercase tracking-widest z-50">Espacio Muestral</div>
+                    </div>
+                    
+                    <div class="tree-level">
+                        ${datos.raiz.map(libro => `
+                            <div class="tree-item">
+                                <div class="tree-node-box">
+                                    <span class="tree-prob-tag font-black text-indigo-600">P=${format(libro.probCondicional)}</span>
+                                    <div class="tree-label !p-4 !text-sm font-black border-2 border-indigo-500 shadow-indigo-100 dark:shadow-none">${libro.nombre}</div>
+                                </div>
+                                ${renderRecursive(libro.hijos, 1)}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+                
+                <div class="mt-20 pt-10 border-t-4 border-double border-slate-200 dark:border-slate-800 flex justify-end">
+                    <div class="bg-indigo-600 p-8 rounded-[2.5rem] shadow-2xl text-white text-right">
+                        <p class="text-xs font-black opacity-70 uppercase tracking-widest mb-2">Probabilidad Total de la Evidencia (P-Total)</p>
+                        <p class="text-4xl font-black">P(E) = ${format(datos.probTotal)}</p>
+                        <p class="text-[10px] font-bold opacity-50 mt-4 uppercase italic">Calculado mediante la sumatoria de las ramas finales del árbol</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+
+        // Bind cierre y descarga
+        document.getElementById('btnCloseTreeModal').onclick = () => this.cerrarModalArbol();
+        document.getElementById('btnCloseTreeModalFooter').onclick = () => this.cerrarModalArbol();
+        document.getElementById('closeTreeModalBg').onclick = () => this.cerrarModalArbol();
+        document.getElementById('btnDownloadTree').onclick = () => this.descargarArbolPDF();
+    },
+
+    descargarArbolPDF() {
+        // Seleccionamos el contenedor real del árbol (sin scrollbars ni bordes de modal)
+        const element = document.querySelector('.bayes-tree-wrapper');
+        if (!element) return;
+
+        const fileName = `bayes_tree_${new Date().getTime()}.pdf`;
+        
+        // Configuración robusta para una sola página
+        const opt = {
+            margin: [5, 5, 5, 5],
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true, 
+                backgroundColor: '#ffffff',
+                logging: false,
+                letterRendering: true,
+                // Forzamos a que capture el ancho total del contenido
+                width: element.scrollWidth,
+                height: element.scrollHeight,
+                onclone: (clonedDoc) => {
+                    // En el clon (lo que se verá en el PDF), forzamos tema claro
+                    const clonedElement = clonedDoc.querySelector('.bayes-tree-wrapper');
+                    clonedElement.style.background = '#ffffff';
+                    clonedElement.style.color = '#000000';
+                    clonedElement.style.padding = '40px';
+                    
+                    // Aseguramos que todos los textos sean visibles y negros
+                    clonedElement.querySelectorAll('.tree-label').forEach(el => {
+                        el.style.background = '#ffffff';
+                        el.style.color = '#1e293b';
+                        el.style.borderColor = '#e2e8f0';
+                    });
+                }
+            },
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a4', 
+                orientation: 'landscape',
+                compress: true
+            }
+        };
+
+        // Mostrar un indicador de carga simple si fuera necesario
+        const btn = document.getElementById('btnDownloadTree');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span>⏳</span> Generando PDF...';
+        btn.disabled = true;
+
+        // Pequeño delay para asegurar estabilidad del DOM
+        setTimeout(() => {
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }).catch(err => {
+                console.error("Error al generar PDF:", err);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }, 500);
+    },
+
+    cerrarModalArbol() {
+        document.getElementById('treeModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    },
+
+    renderizarResultado(titulo, resObj, container = null) {
         this._renderCore(titulo, {
             concepto: resObj.concepto,
             formula: resObj.formula,
@@ -214,8 +408,9 @@ export const UIView = {
             tablas: resObj.tablas,
             resultado: resObj.resultado,
             resultadoLabel: resObj.resultadoLabel,
-            datosGrafico: resObj.datosGrafico
-        });
+            datosGrafico: resObj.datosGrafico,
+            datosArbol: resObj.datosArbol
+        }, container);
     },
 
     renderDetallado(titulo, resObj) {

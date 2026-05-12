@@ -6,12 +6,17 @@ export const TableView = {
             .map(h => `<th class="px-5 py-3 bg-slate-100/80 dark:bg-slate-800/80 font-semibold text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 text-left text-xs uppercase tracking-wider">${h}</th>`)
             .join('');
             
+        const parseMarkdown = (text) => {
+            if (typeof text !== 'string') return text;
+            return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-black text-indigo-600 dark:text-indigo-400">$1</strong>');
+        };
+
         const trs = tablaDatos.filas
             .map(fila => {
                 const isLast = fila[0] && fila[0].toString().toUpperCase().includes('TOTAL');
                 const rowClass = isLast ? 'font-bold bg-slate-50 dark:bg-slate-800/30 border-t-2 border-slate-300 dark:border-slate-600' : 'hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition duration-150';
                 
-                const tds = fila.map(celda => `<td class="px-5 py-3 ${isLast ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'} border-b border-slate-100 dark:border-slate-800 whitespace-nowrap">${celda}</td>`).join('');
+                const tds = fila.map(celda => `<td class="px-5 py-3 ${isLast ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'} border-b border-slate-100 dark:border-slate-800 whitespace-nowrap">${parseMarkdown(celda)}</td>`).join('');
                 return `<tr class="${rowClass}">${tds}</tr>`;
             })
             .join('');
