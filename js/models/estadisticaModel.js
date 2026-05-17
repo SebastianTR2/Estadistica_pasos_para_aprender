@@ -11,7 +11,7 @@ export const EstadisticaModel = {
         if (!n || n <= 0 || n > N) throw new Error('Tamaño de muestra n inválido o ausente');
         const prob = n / N;
         const shuffled = [...poblacion].sort(() => Math.random() - 0.5).slice(0, n).sort((a, b) => a - b);
-        
+
         return {
             concepto: 'Cada elemento de la población tiene exactamente la misma probabilidad de ser seleccionado.',
             formula: `P(selección) = n / N = ${n} / ${N}`,
@@ -67,7 +67,7 @@ export const EstadisticaModel = {
             return [e.nombre, e.N.toString(), formatDecimals(prop), `${formatDecimals(prop * 100)}%`, ni.toString()];
         });
         rows.push(['TOTAL', N.toString(), '1.00', '100%', total.toString()]);
-        
+
         return {
             concepto: 'La población se divide en subgrupos (estratos) y la muestra se distribuye proporcionalmente.',
             formula: 'n_i = (N_i / N) × n',
@@ -98,7 +98,7 @@ export const EstadisticaModel = {
         }
         idx.sort((a, b) => a - b);
         const seleccionados = idx.map(i => `Conglomerado ${i + 1} (id: ${poblacion[i]})`);
-        
+
         return {
             concepto: 'La población se divide en grupos naturales (conglomerados) y se seleccionan grupos completos al azar.',
             formula: 'Seleccionar m conglomerados de M totales → incluir TODOS sus elementos',
@@ -197,11 +197,11 @@ export const EstadisticaModel = {
         const freq = {};
         data.forEach(d => { freq[d] = (freq[d] || 0) + 1; });
         const maxFreq = Math.max(...Object.values(freq));
-        const modas = Object.keys(freq).filter(k => freq[k] === maxFreq).map(Number).sort((a,b)=>a-b);
+        const modas = Object.keys(freq).filter(k => freq[k] === maxFreq).map(Number).sort((a, b) => a - b);
         const tipo = modas.length === data.length ? 'Amodal' : modas.length === 1 ? 'Unimodal' : `Multimodal (${modas.length} modas)`;
-        
-        const freqRows = Object.entries(freq).sort((a,b) => a[0]-b[0]).map(([v, f]) => [v, f.toString(), f === maxFreq ? 'Moda' : '']);
-        
+
+        const freqRows = Object.entries(freq).sort((a, b) => a[0] - b[0]).map(([v, f]) => [v, f.toString(), f === maxFreq ? 'Moda' : '']);
+
         let chartType = 'bar';
         if (tipoGrafico === 'linea') chartType = 'line';
         if (tipoGrafico === 'pastel') chartType = 'pie';
@@ -252,7 +252,7 @@ export const EstadisticaModel = {
         const n = data.length;
         const sumaTotal = data.reduce((acc, val) => acc + val, 0);
         const xbar = sumaTotal / n;
-        
+
         let sumSq = 0;
         const rowsDetallado = data.map((xi, i) => {
             const dif = xi - xbar;
@@ -267,7 +267,7 @@ export const EstadisticaModel = {
                 formatDecimals(sumSq)
             ];
         });
-        
+
         rowsDetallado.push([
             'TOTAL',
             '',
@@ -282,7 +282,7 @@ export const EstadisticaModel = {
         // MODO RESUMEN (Frecuencias)
         const freq = {};
         data.forEach(d => { freq[d] = (freq[d] || 0) + 1; });
-        const vals = Object.keys(freq).map(Number).sort((a,b)=>a-b);
+        const vals = Object.keys(freq).map(Number).sort((a, b) => a - b);
         let sumSqResumen = 0;
         const rowsResumen = vals.map(xi => {
             const fi = freq[xi];
@@ -295,7 +295,7 @@ export const EstadisticaModel = {
                 formatDecimals(fiDifSq)
             ];
         });
-        
+
         rowsResumen.push([
             'TOTAL',
             n.toString(),
@@ -305,7 +305,7 @@ export const EstadisticaModel = {
         return {
             concepto: 'La varianza representa qué tan dispersos están los datos respecto a su media. Un valor alto indica mayor variabilidad.',
             formula: 'σ² = Σ(xi - x̄)² / n',
-            
+
             detallado: {
                 pasos: [
                     `Paso 1: Se calcula la media sumando los datos y dividiéndolos entre n (${n}) → x̄ = **${formatDecimals(xbar)}**`,
@@ -320,7 +320,7 @@ export const EstadisticaModel = {
                     filas: rowsDetallado
                 }]
             },
-            
+
             resumen: {
                 tablas: [{
                     titulo: 'Cálculo Compacto (Agrupado por Frecuencia)',
@@ -331,7 +331,7 @@ export const EstadisticaModel = {
 
             resultado: formatDecimals(v),
             resultadoLabel: 'Varianza Poblacional (σ²)',
-            
+
             resultadosIntermedios: {
                 media: formatDecimals(xbar),
                 sumaCuadrados: formatDecimals(sumSq),
@@ -343,7 +343,7 @@ export const EstadisticaModel = {
     calcDesvStd(varPop, media) {
         if (varPop == null) throw new Error('Parámetro varianza requerido.');
         const sd = Math.sqrt(varPop);
-        
+
         let interpTexto = '';
         let colorClase = "text-slate-700 bg-slate-50 border-slate-200";
         if (media != null && media !== 0) {
@@ -357,7 +357,7 @@ export const EstadisticaModel = {
         return {
             concepto: 'La desviación estándar indica cuánto se alejan los datos de la media en promedio. Mide la dispersión en las mismas unidades que los datos originales.',
             formula: 'σ = √σ²',
-            
+
             detallado: {
                 pasos: [
                     `Se toma la varianza previamente calculada (σ² = ${formatDecimals(varPop)})`,
@@ -373,7 +373,7 @@ export const EstadisticaModel = {
                     </div>
                 `
             },
-            
+
             resumen: {
                 tablas: [],
                 operacionesGeneralesHtml: `
@@ -385,7 +385,7 @@ export const EstadisticaModel = {
 
             resultado: formatDecimals(sd),
             resultadoLabel: 'Desviación Estándar (σ)',
-            
+
             resultadosIntermedios: {
                 varianza: formatDecimals(varPop),
                 desviacion: formatDecimals(sd)
@@ -404,10 +404,10 @@ export const EstadisticaModel = {
     calcCoefVar(media, desviacion) {
         if (media == null || desviacion == null) throw new Error('Parámetros media y desviación requeridos.');
         if (media === 0) throw new Error('La media no puede ser cero para calcular el CV.');
-        
+
         const cv = (desviacion / Math.abs(media)) * 100;
         const interpTexto = interpretarCV(cv);
-        
+
         let colorClase = "text-red-700 bg-red-50 border-red-200";
         if (cv < 10) colorClase = "text-green-700 bg-green-50 border-green-200";
         else if (cv < 30) colorClase = "text-yellow-700 bg-yellow-50 border-yellow-200";
@@ -415,7 +415,7 @@ export const EstadisticaModel = {
         return {
             concepto: 'El coeficiente de variación mide la dispersión relativa de los datos respecto a la media.',
             formula: 'CV = (σ / |x̄|) × 100',
-            
+
             detallado: {
                 pasos: [
                     `Se toma la desviación estándar previamente calculada (σ = ${formatDecimals(desviacion)})`,
@@ -432,7 +432,7 @@ export const EstadisticaModel = {
                     </div>
                 `
             },
-            
+
             resumen: {
                 tablas: [],
                 operacionesGeneralesHtml: `
@@ -444,7 +444,7 @@ export const EstadisticaModel = {
 
             resultado: `${formatDecimals(cv)}%`,
             resultadoLabel: 'Coeficiente de Variación (CV)',
-            
+
             resultadosIntermedios: {
                 media: formatDecimals(media),
                 desviacion: formatDecimals(desviacion),
@@ -455,11 +455,10 @@ export const EstadisticaModel = {
                 <div class="${colorClase} rounded-xl p-6 shadow-sm mt-8 border">
                     <h4 class="text-xs font-bold uppercase tracking-wider mb-2 opacity-80">💡 Interpretación del resultado</h4>
                     <p class="font-medium text-lg mb-1">${interpTexto}</p>
-                    <p class="opacity-90 text-sm">El coeficiente de variación indica que los datos presentan ${interpTexto.toLowerCase()}, lo que significa que ${
-                        cv < 10 ? 'están agrupados de forma muy compacta cerca de la media.' :
-                        cv < 30 ? 'existe una dispersión considerable respecto a la media.' :
+                    <p class="opacity-90 text-sm">El coeficiente de variación indica que los datos presentan ${interpTexto.toLowerCase()}, lo que significa que ${cv < 10 ? 'están agrupados de forma muy compacta cerca de la media.' :
+                    cv < 30 ? 'existe una dispersión considerable respecto a la media.' :
                         'existe una alta separación entre los datos y una baja representatividad de la media.'
-                    }</p>
+                }</p>
                 </div>
             `
         };
@@ -469,7 +468,7 @@ export const EstadisticaModel = {
     calcMediaMovil(data, k) {
         if (!k || k < 2) k = 3;
         if (data.length < k) throw new Error(`Se necesitan al menos ${k} datos para evaluar este orden.`);
-        
+
         const mm = [];
         const mmValues = [];
         const n = data.length;
@@ -478,7 +477,7 @@ export const EstadisticaModel = {
             const sumData = data.slice(i, i + k);
             const sum = sumData.reduce((a, b) => a + b, 0);
             const val = sum / k;
-            
+
             // detailed format: i, (18, 20, 20), suma, media
             mm.push([
                 (i + 1).toString(),
@@ -491,13 +490,13 @@ export const EstadisticaModel = {
 
         const resumenRows = mm.map((row) => [row[0], row[3]]);
 
-        const labels = Array.from({length: n}, (_, i) => String(i + 1));
+        const labels = Array.from({ length: n }, (_, i) => String(i + 1));
         const chartDataMM = Array(k - 1).fill(null).concat(mmValues);
 
         return {
             concepto: 'La media móvil permite observar la tendencia general de los datos suavizando las variaciones. Se obtiene calculando promedios sobre subconjuntos consecutivos.',
             formula: `MM (orden ${k}) = (Xᵢ + Xᵢ₊₁ + ... + Xᵢ₊ₖ₋₁) / ${k}`,
-            
+
             detallado: {
                 pasos: [
                     `Se seleccionan subconjuntos consecutivos de tamaño k = ${k}`,
@@ -509,7 +508,7 @@ export const EstadisticaModel = {
                     { titulo: `Cálculo Paso a Paso (Orden ${k})`, encabezados: ['i', 'Subconjunto', 'Suma', 'Media Móvil'], filas: mm }
                 ]
             },
-            
+
             resumen: {
                 tablas: [
                     { titulo: `Resumen de Media Móvil (Orden ${k})`, encabezados: ['Índice', 'Media Móvil'], filas: resumenRows }
@@ -518,7 +517,7 @@ export const EstadisticaModel = {
 
             resultado: `${mm.length} promedios`,
             resultadoLabel: `MM obtenidas de Orden ${k}`,
-            
+
             resultadosIntermedios: {
                 ordenEvaluar: k,
                 promediosExtrapolados: mm.length
@@ -564,18 +563,18 @@ export const EstadisticaModel = {
 
         // MM3: Empieza en i=2 (el 3er dato)
         for (let i = 2; i < n; i++) {
-            mm3[i] = (data[i] + data[i-1] + data[i-2]) / 3;
+            mm3[i] = (data[i] + data[i - 1] + data[i - 2]) / 3;
         }
 
         // MM4,1: Empieza en i=3 (el 4to dato)
         for (let i = 3; i < n; i++) {
-            mm4_1[i] = (data[i] + data[i-1] + data[i-2] + data[i-3]) / 4;
+            mm4_1[i] = (data[i] + data[i - 1] + data[i - 2] + data[i - 3]) / 4;
         }
 
         // MM4,2: Empieza en i=4 (promedio de dos MM4,1 consecutivos)
         for (let i = 4; i < n; i++) {
-            if (mm4_1[i] !== null && mm4_1[i-1] !== null) {
-                mm4_2[i] = (mm4_1[i] + mm4_1[i-1]) / 2;
+            if (mm4_1[i] !== null && mm4_1[i - 1] !== null) {
+                mm4_2[i] = (mm4_1[i] + mm4_1[i - 1]) / 2;
             }
         }
 
@@ -588,7 +587,7 @@ export const EstadisticaModel = {
 
     calcMediaGeometrica(data) {
         if (data.some(d => d <= 0)) throw new Error('La media geométrica no admite valores negativos ni cero');
-        
+
         const n = data.length;
 
         // Usar logaritmos para evitar desbordamiento (Infinity) con datasets grandes
@@ -611,7 +610,7 @@ export const EstadisticaModel = {
         return {
             concepto: 'La media geométrica se utiliza para promediar datos multiplicativos o tasas de crecimiento.',
             formula: 'MG = ⁿ√(x₁ · x₂ · ... · xₙ) = exp(Σln(xᵢ)/n)',
-            
+
             detallado: {
                 pasos: [
                     `Se calcula el logaritmo natural de cada dato`,
@@ -665,13 +664,13 @@ export const EstadisticaModel = {
         if (data.some(d => d === 0)) throw new Error('Ningún valor puede ser cero');
         const n = data.length;
         let sumRecip = 0;
-        
+
         const filasTabla = data.map((xi, index) => {
             const recip = 1 / xi;
             sumRecip += recip;
             return [`1/${formatDecimals(xi)}`, formatDecimals(recip)];
         });
-        
+
         // Clonar las filas para la web y agregar totales
         const filasWeb = [...filasTabla, ['TOTAL', formatDecimals(sumRecip)]];
 
@@ -759,7 +758,7 @@ export const EstadisticaModel = {
         const ds = [];
         for (let k = 1; k <= 9; k++) {
             const pos = k * (n + 1) / 10;
-            ds.push([`D${k}`, `${k*10}%`, formatDecimals(pos), formatDecimals(interpolate(s, pos))]);
+            ds.push([`D${k}`, `${k * 10}%`, formatDecimals(pos), formatDecimals(interpolate(s, pos))]);
         }
         return {
             concepto: 'Los deciles D1–D9 dividen los datos en 10 partes iguales.',
@@ -810,36 +809,36 @@ export const EstadisticaModel = {
         const n = s.length;
         const counts = {};
         s.forEach(d => { counts[d] = (counts[d] || 0) + 1; });
-        
-        const Xis = Object.keys(counts).map(Number).sort((a,b)=>a-b);
+
+        const Xis = Object.keys(counts).map(Number).sort((a, b) => a - b);
         let Fi_acum = 0;
         let Fri_acum = 0;
-        
+
         const rows = [];
         const labels = [];
         const data_fi = [];
         const data_porcentajes = [];
 
         Xis.forEach((x, index) => {
-           const fi = counts[x];
-           Fi_acum += fi;
-           const fri = fi / n;
-           Fri_acum += fri;
-           const pct = fri * 100;
-           
-           rows.push([
-               (index + 1).toString(),
-               formatDecimals(x),
-               fi.toString(),
-               Fi_acum.toString(),
-               formatDecimals(fri),
-               formatDecimals(Fri_acum),
-               formatDecimals(pct) + '%'
-           ]);
+            const fi = counts[x];
+            Fi_acum += fi;
+            const fri = fi / n;
+            Fri_acum += fri;
+            const pct = fri * 100;
 
-           labels.push(x.toString());
-           data_fi.push(fi);
-           data_porcentajes.push(pct);
+            rows.push([
+                (index + 1).toString(),
+                formatDecimals(x),
+                fi.toString(),
+                Fi_acum.toString(),
+                formatDecimals(fri),
+                formatDecimals(Fri_acum),
+                formatDecimals(pct) + '%'
+            ]);
+
+            labels.push(x.toString());
+            data_fi.push(fi);
+            data_porcentajes.push(pct);
         });
 
         const sumFi = Fi_acum;
@@ -878,9 +877,9 @@ export const EstadisticaModel = {
 
         // Formateador limpio: muestra enteros sin decimales, decimales sin ceros extra, coma decimal
         const cln = v => parseFloat(Number(v).toFixed(2)).toString().replace('.', ',');
-        const R_str  = cln(agrupada.R);
-        const k_str  = agrupada.k.toString();
-        const A_str  = cln(agrupada.A);
+        const R_str = cln(agrupada.R);
+        const k_str = agrupada.k.toString();
+        const A_str = cln(agrupada.A);
         const min_str = cln(agrupada.min);
 
         return {
@@ -949,7 +948,7 @@ export const EstadisticaModel = {
         const s2 = variance(data);
         const sigma = Math.sqrt(s2);
         const sigma4 = s2 * s2;
-        
+
         let sumPotencias4 = 0;
         const rowsDetallado = data.map((xi, i) => {
             const dif = xi - xbar;
@@ -968,7 +967,7 @@ export const EstadisticaModel = {
         const K = sumPotencias4 / (n * sigma4);
         const exceso = K - 3;
         const tipo = Math.abs(exceso) < 0.1 ? 'Mesocúrtica' : exceso > 0 ? 'Leptocúrtica' : 'Platicúrtica';
-        
+
         return {
             concepto: 'Grado de apuntamiento comparado con la normal (K=3). Una curtosis positiva (Leptocúrtica) indica mayor concentración cerca de la media.',
             formula: 'K = [Σ(xᵢ - x̄)⁴ / (n · σ⁴)] - 3',
@@ -984,7 +983,7 @@ export const EstadisticaModel = {
                     </div>
                 </div>
             `,
-            
+
             detallado: {
                 pasos: [
                     `Paso 1: Media x̄ = **${formatDecimals(xbar)}**`,
@@ -1014,7 +1013,7 @@ export const EstadisticaModel = {
                     </div>
                 `
             },
-            
+
             resumen: {
                 tablas: [],
                 operacionesGeneralesHtml: `
@@ -1026,7 +1025,7 @@ export const EstadisticaModel = {
 
             resultado: formatDecimals(exceso),
             resultadoLabel: tipo,
-            
+
             resultadosIntermedios: {
                 n: n,
                 media: formatDecimals(xbar),
@@ -1035,7 +1034,7 @@ export const EstadisticaModel = {
                 denominador: formatDecimals(n * sigma4),
                 coeficiente: formatDecimals(K)
             },
-            
+
             filasTablaExcel: rowsDetallado
         };
     },
@@ -1046,7 +1045,7 @@ export const EstadisticaModel = {
         const s2 = variance(data);
         const sigma = Math.sqrt(s2);
         const sigma3 = Math.pow(sigma, 3);
-        
+
         let sumPotencias3 = 0;
         const rowsDetallado = data.map((xi, i) => {
             const dif = xi - xbar;
@@ -1063,12 +1062,12 @@ export const EstadisticaModel = {
 
         // Fisher Coefficient (g1)
         const g1 = sumPotencias3 / (n * sigma3);
-        
+
         // Pearson Coefficient (AS)
         const s = sortAsc(data);
         const med = interpolate(s, 2 * (n + 1) / 4);
         const pearson = 3 * (xbar - med) / sigma;
-        
+
         const tipo = Math.abs(g1) < 0.1 ? 'Simétrica' : g1 > 0 ? 'Asimetría Positiva (derecha)' : 'Asimetría Negativa (izquierda)';
 
         return {
@@ -1099,7 +1098,7 @@ export const EstadisticaModel = {
                     </div>
                 </div>
             `,
-            
+
             detallado: {
                 pasos: [
                     `Paso 1: Media x̄ = **${formatDecimals(xbar)}**`,
@@ -1139,7 +1138,7 @@ export const EstadisticaModel = {
                     </div>
                 `
             },
-            
+
             resumen: {
                 tablas: [],
                 operacionesGeneralesHtml: `
@@ -1171,7 +1170,7 @@ export const EstadisticaModel = {
         const numerador = (Z ** 2) * p * q * N;
         const denominador = (e ** 2) * (N - 1) + (Z ** 2) * p * q;
         const n = Math.ceil(numerador / denominador);
-        
+
         return {
             concepto: 'Cálculo del tamaño de muestra necesario para estimar una proporción en una población finita.',
             formula: 'n = (Z² · p · q · N) / (E²(N-1) + Z² · p · q)',
@@ -1204,7 +1203,7 @@ export const EstadisticaModel = {
         let Fi_acum = 0;
         let Fri_acum = 0;
         const filas = [];
-        
+
         for (let i = 0; i < k; i++) {
             const Li = Math.round((min + i * A_rounded) * 100) / 100;
             const Ls = Math.round((Li + A_rounded) * 100) / 100;
@@ -1285,7 +1284,7 @@ export const EstadisticaModel = {
             formula: 'P(palabra) = f / N',
             pasos: [
                 `Texto procesado: ${text.length} caracteres encontrados.`,
-                `Total de palabras analizadas (post-limpieza): **${totalWords}**`,
+                `Total de palabras analizadas (post-limpieza): ${totalWords}`,
                 `Se eliminaron signos de puntuación y se normalizó el texto.`,
                 options.filterStopWords ? `Se filtraron palabras comunes (conectores, preposiciones, artículos).` : `Se incluyeron todas las palabras.`,
                 `Se calculó la frecuencia absoluta (f) y la probabilidad relativa (f/N) para cada término.`
@@ -1324,7 +1323,7 @@ export const EstadisticaModel = {
         const likelihoodsByBook = library.map(doc => {
             const rows = doc.results.tablas[0].filas;
             const totalWords = parseInt(doc.results.pasos[1].match(/\d+/)[0]);
-            
+
             const probs = {};
             targetWords.forEach(word => {
                 const row = rows.find(r => r[1].toLowerCase() === word);
@@ -1399,7 +1398,7 @@ export const EstadisticaModel = {
             const bookInfo = library.find(b => b.name === p.docName);
             const freq = targetWords.reduce((sum, w) => sum + (bookInfo.results.mapaFrecuencias[w.toLowerCase()] || 0), 0);
             const totalN = bookInfo.results.totalPalabras;
-            
+
             // Determinamos el índice original del libro para el "Camino N"
             const originalIndex = library.findIndex(b => b.name === p.docName) + 1;
 
@@ -1414,6 +1413,139 @@ export const EstadisticaModel = {
                 `**${formatPct(p.posterior)}**`
             ];
         });
+
+        // --- 4. Generación automática de Cadenas de Markov ---
+        // Basado en el árbol de decisión de Naive Bayes
+        let markovHtml = `<div class="mt-12 bg-pink-50/50 dark:bg-pink-900/10 border border-pink-200 dark:border-pink-800 rounded-2xl p-6 shadow-inner animate-fade-in-up">
+            <h3 class="text-lg font-black text-pink-600 dark:text-pink-400 mb-4 flex items-center gap-2"><span>🔗</span> Equivalencia en Cadenas de Markov</h3>
+            <p class="text-xs text-slate-600 dark:text-slate-400 mb-6">Esta sección muestra cómo las capas de la red bayesiana se pueden representar como multiplicaciones de matrices de transición de estados (Cadenas de Markov no homogéneas), calculando la probabilidad de cada evidencia paso a paso.</p>
+            <div class="space-y-6">`;
+
+        const renderStep = (stepNumber, pi_prev, matrix, pi_next, formula, prevLabel, nextLabel) => {
+            let html = `<div class="bg-[#12121A] dark:bg-[#12121A] p-6 rounded-2xl border border-pink-500/20 shadow-lg mb-8 w-full relative group transition-all">
+                <div class="text-[12px] font-black text-pink-400 uppercase tracking-widest mb-2">Paso ${stepNumber}: Cálculo de ${nextLabel}</div>
+                <div class="text-sm font-mono text-slate-400 mb-6">${formula}</div>
+                
+                <div class="flex items-center gap-4 overflow-x-auto pb-4">
+                    <!-- Vector Previo -->
+                    <div class="flex flex-col gap-3 shrink-0">
+                        <div class="text-[10px] font-bold text-indigo-300 text-center uppercase tracking-widest">${prevLabel}</div>
+                        <div class="flex gap-2 bg-[#1A1A24] p-3 rounded-xl border border-indigo-500/30">`;
+            pi_prev.forEach(v => {
+                html += `<div class="bg-[#232345] px-4 py-3 rounded-lg text-base font-black font-mono text-center text-white min-w-[80px] shadow-inner">${formatDec(v)}</div>`;
+            });
+            html += `       </div>
+                    </div>
+
+                    <!-- Operador -->
+                    <div class="text-2xl font-black text-slate-500 shrink-0">·</div>
+
+                    <!-- Matriz -->
+                    <div class="flex flex-col gap-3 shrink-0">
+                        <div class="text-[10px] font-bold text-pink-400 text-center uppercase tracking-widest">Matriz P${stepNumber}</div>
+                        <div class="bg-[#1A1A24] p-3 rounded-xl border border-pink-500/30">
+                            <table class="border-collapse">`;
+            matrix.forEach(row => {
+                html += `<tr>`;
+                row.forEach(cell => {
+                    html += `<td class="border border-slate-700/50 px-4 py-2 text-sm font-bold font-mono text-center text-slate-200 min-w-[80px] bg-[#12121A]">${formatDec(cell)}</td>`;
+                });
+                html += `</tr>`;
+            });
+            html += `               </table>
+                        </div>
+                    </div>
+
+                    <!-- Operador -->
+                    <div class="text-2xl font-black text-slate-500 shrink-0">=</div>
+
+                    <!-- Vector Resultado -->
+                    <div class="flex flex-col gap-3 shrink-0">
+                        <div class="text-[10px] font-bold text-emerald-400 text-center uppercase tracking-widest">${nextLabel}</div>
+                        <div class="flex gap-2 bg-[#1A1A24] p-3 rounded-xl border border-emerald-500/30">`;
+            pi_next.forEach(v => {
+                html += `<div class="bg-emerald-900/40 px-4 py-3 rounded-lg text-base font-black font-mono text-center text-emerald-100 min-w-[80px] shadow-inner">${formatDec(v)}</div>`;
+            });
+            html += `       </div>
+                    </div>
+                </div>
+            </div>`;
+            return html;
+        };
+
+        const renderInitialVector = (name, vector, subtitle) => {
+            let html = `<div class="bg-[#12121A] dark:bg-[#12121A] p-6 rounded-2xl shadow-lg mb-8 w-full relative group transition-all border border-[#3A3A6A]">
+                <div class="text-[12px] font-black text-indigo-300 uppercase tracking-widest mb-2">${name}</div>
+                <div class="text-sm font-mono text-indigo-200/80 mb-6">${subtitle}</div>
+                <div class="flex flex-wrap gap-3">`;
+            vector.forEach(val => {
+                html += `<div class="bg-[#1A1A2E] dark:bg-[#1A1A2E] px-5 py-4 rounded-xl text-base font-black font-mono text-center text-indigo-100 min-w-[100px] shadow-inner border border-indigo-500/20">${formatDec(val)}</div>`;
+            });
+            html += `</div></div>`;
+            return html;
+        };
+
+        let pi_current = library.map(b => 1 / library.length);
+        markovHtml += renderInitialVector('Vector Inicial π(0)', pi_current, 'Distribución inicial de los documentos P(D)');
+
+        for (let k = 0; k < targetWords.length; k++) {
+            const word = targetWords[k];
+            let matrix_k = [];
+
+            if (k === 0) {
+                matrix_k = likelihoodsByBook.map(book => {
+                    const pW = book.probs[word];
+                    return [pW, 1 - pW];
+                });
+            } else {
+                const prevWord = targetWords[k - 1];
+                let num_W_W = 0;
+                let num_noW_W = 0;
+
+                library.forEach((doc, i) => {
+                    const pb = 1 / library.length;
+                    const bookData = likelihoodsByBook[i];
+                    const pw_prev = bookData.probs[prevWord];
+                    const pno_w_prev = 1 - pw_prev;
+                    const pw_curr = bookData.probs[word];
+
+                    num_W_W += pb * pw_prev * pw_curr;
+                    num_noW_W += pb * pno_w_prev * pw_curr;
+                });
+
+                const p_W_prev = pi_current[0];
+                const p_noW_prev = pi_current[1];
+
+                const p_curr_given_prev = p_W_prev > 0 ? (num_W_W / p_W_prev) : 0;
+                const p_curr_given_noPrev = p_noW_prev > 0 ? (num_noW_W / p_noW_prev) : 0;
+
+                matrix_k = [
+                    [p_curr_given_prev, 1 - p_curr_given_prev],
+                    [p_curr_given_noPrev, 1 - p_curr_given_noPrev]
+                ];
+            }
+
+            const next_pi = new Array(matrix_k[0].length).fill(0);
+            for (let c = 0; c < matrix_k[0].length; c++) {
+                for (let r = 0; r < matrix_k.length; r++) {
+                    next_pi[c] += pi_current[r] * matrix_k[r][c];
+                }
+            }
+
+            markovHtml += renderStep(
+                k + 1,
+                pi_current,
+                matrix_k,
+                next_pi,
+                `π(${k + 1}) = π(${k}) · P${k + 1} (Probs de "${word}")`,
+                `π(${k})`,
+                `π(${k + 1})`
+            );
+
+            pi_current = next_pi;
+        }
+
+        markovHtml += `</div></div>`;
 
         return {
             concepto: `Análisis de Bayes Secuencial para ${targetWords.length} evidencias combinadas.`,
@@ -1432,6 +1564,8 @@ export const EstadisticaModel = {
             }],
             resultado: posteriors[0].docName,
             resultadoLabel: `Clasificación combinada: El texto pertenece a **${posteriors[0].docName}** con ${formatPct(posteriors[0].posterior)} de confianza.`,
+            ocultarConclusion: true,
+            markovHtml: markovHtml,
             datosArbol: {
                 niveles: targetWords.length + 1,
                 evidencias: targetWords,
@@ -1467,7 +1601,7 @@ export const EstadisticaModel = {
         const results = commonWords.map(word => {
             let totalFreq = 0;
             let totalProb = 0;
-            
+
             library.forEach(doc => {
                 const row = doc.results.tablas[0].filas.find(r => r[1].toLowerCase() === word);
                 totalFreq += parseInt(row[2]);

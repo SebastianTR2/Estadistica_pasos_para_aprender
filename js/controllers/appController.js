@@ -13,6 +13,8 @@ export const AppController = {
     excelData: null, // Guardar datos actuales del archivo
     bookLibrary: [], // Biblioteca de libros analizados
     currentColumnName: 'Valores', // Nombre de la columna seleccionada
+    currentBayesWords: [],
+    selectedBayesWord: null,
 
     init() {
         UIView.init();
@@ -1015,7 +1017,7 @@ export const AppController = {
                     <span class="text-[9px] font-black text-pink-500 uppercase tracking-widest">${book.date}</span>
                     <h4 class="font-bold text-slate-800 dark:text-white truncate pr-6">${book.name}</h4>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                        ${book.results.pasos[1]}
+                        ${UIView.parseMarkdown(book.results.pasos[1])}
                     </p>
                     <div class="mt-3 flex items-center justify-between">
                         <span class="text-[10px] bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 px-2 py-1 rounded-md font-bold italic">
@@ -1091,12 +1093,38 @@ export const AppController = {
         finalWords = finalWords.slice(0, numLevels);
         document.getElementById('bayesWord').value = finalWords.join(', ');
 
+        this.currentBayesWords = finalWords;
+        this.selectedBayesWord = finalWords[0]; // Seleccionar la primera palabra por defecto
+
+        this.renderizarBayesSeleccionado();
+    },
+
+    renderizarBayesSeleccionado() {
+        if (!this.selectedBayesWord) return;
+
         try {
-            const resObj = EstadisticaModel.calcBayes(finalWords.join(','), this.bookLibrary);
+            // Calculamos Bayes de 1 nivel específicamente para la palabra seleccionada
+            const resObj = EstadisticaModel.calcBayes(this.selectedBayesWord, this.bookLibrary);
             const container = document.getElementById('bayesResults');
             container.classList.remove('hidden');
             
-            UIView.renderizarResultado(`Teorema de Bayes: ${numLevels} Niveles`, resObj, container);
+            // Renderizamos pasándole las palabras completas y la seleccionada
+            UIView.renderizarResultadoConCombo(
+                `Teorema de Bayes: Clasificación para ${this.selectedBayesWord}`,
+                resObj,
+                this.currentBayesWords,
+                this.selectedBayesWord,
+                container
+            );
+            
+            // Vincular evento al cambiar el combo box
+            const selectCombo = document.getElementById('selectBayesEvidencia');
+            if (selectCombo) {
+                selectCombo.addEventListener('change', (e) => {
+                    this.selectedBayesWord = e.target.value;
+                    this.renderizarBayesSeleccionado();
+                });
+            }
             
         } catch (err) {
             alert('Error en Bayes: ' + err.message);

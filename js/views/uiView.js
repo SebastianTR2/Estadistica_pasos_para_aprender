@@ -52,7 +52,8 @@ export const UIView = {
     },
 
     parseMarkdown(text) {
-        return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>');
+        if (!text) return '';
+        return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-900 dark:text-white">$1</strong>').replace(/\*\*/g, '');
     },
 
     lastBayesData: null,
@@ -60,7 +61,7 @@ export const UIView = {
     _renderCore(titulo, configuracion, customContainer = null) {
         const targetContainer = customContainer || resultsSection;
         this.ocultarError();
-        const { concepto, formula, formulaHtml: formulaHtmlConfig, pasos, tablas, resultado, resultadoLabel, datosGrafico, numIntermedios, interpretacionHtml, operacionesGeneralesHtml, datosArbol } = configuracion;
+        const { concepto, formula, formulaHtml: formulaHtmlConfig, pasos, tablas, resultado, resultadoLabel, datosGrafico, numIntermedios, interpretacionHtml, operacionesGeneralesHtml, datosArbol, ocultarConclusion, markovHtml } = configuracion;
         
         if (datosArbol) this.lastBayesData = datosArbol;
 
@@ -136,6 +137,21 @@ export const UIView = {
         if (datosArbol) {
             const format = (n) => parseFloat(n.toFixed(5)).toString().replace('.', ',');
             
+            const comboHtml = (this.evidenciasCombo && this.evidenciasCombo.length > 0) ? `
+                <div class="flex items-center gap-3">
+                    <span class="text-[10px] font-black text-indigo-400 dark:text-indigo-500 uppercase tracking-widest">Evidencia:</span>
+                    <select id="selectBayesEvidencia" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg transition-all border-none cursor-pointer focus:ring-2 focus:ring-indigo-400 px-4 py-2">
+                        ${this.evidenciasCombo.map(ev => `
+                            <option value="${ev}" ${ev === this.selectedEvidencia ? 'selected' : ''}>${ev}</option>
+                        `).join('')}
+                    </select>
+                </div>
+            ` : `
+                <button id="btnExpandTree" class="px-4 py-2 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-500 transition-all shadow-lg flex items-center gap-2">
+                    <span>🔍</span> Vista Completa (Ordenado)
+                </button>
+            `;
+            
             arbolHtml = `
             <div class="mt-8">
                 <div class="flex items-center justify-between mb-6">
@@ -143,9 +159,7 @@ export const UIView = {
                         <span class="w-4 h-4 bg-indigo-500 rounded-full"></span>
                         Previsualización del Árbol (${datosArbol.niveles - 1} niveles)
                     </h4>
-                    <button id="btnExpandTree" class="px-4 py-2 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-500 transition-all shadow-lg flex items-center gap-2">
-                        <span>🔍</span> Vista Completa (Ordenado)
-                    </button>
+                    ${comboHtml}
                 </div>
                 
                 <!-- Vista Compacta (Scrollable y pequeña) -->
@@ -214,9 +228,10 @@ export const UIView = {
 
                 ${tablasHtml}
 
-                ${(arbolHtml || datosGrafico) ? `
+                ${(arbolHtml || datosGrafico || markovHtml) ? `
                 <div class="p-8 space-y-10">
                     ${arbolHtml}
+                    ${markovHtml || ''}
                     
                     <div id="chartContainer" class="hidden w-full max-w-3xl mx-auto mt-12 mb-6 p-6 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-premium">
                         <div class="chart-container-premium">
@@ -227,6 +242,7 @@ export const UIView = {
                 ` : ''}
 
                 <!-- Resultado Final -->
+                ${!ocultarConclusion ? `
                 <div class="mt-12 p-1 bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 rounded-[2.5rem] shadow-2xl animate-pulse-subtle">
                     <div class="bg-white dark:bg-slate-900 rounded-[2.4rem] p-10 text-center relative overflow-hidden group">
                         <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl"></div>
@@ -240,6 +256,7 @@ export const UIView = {
                         </div>
                     </div>
                 </div>
+                ` : ''}
             </div>
         </div>
         `;
@@ -311,25 +328,16 @@ export const UIView = {
                     </div>
                 </div>
             </div>
-                
-                <div class="mt-20 pt-10 border-t-4 border-double border-slate-200 dark:border-slate-800 flex justify-end">
-                    <div class="bg-indigo-600 p-8 rounded-[2.5rem] shadow-2xl text-white text-right">
-                        <p class="text-xs font-black opacity-70 uppercase tracking-widest mb-2">Probabilidad Total de la Evidencia (P-Total)</p>
-                        <p class="text-4xl font-black">P(E) = ${format(datos.probTotal)}</p>
-                        <p class="text-[10px] font-bold opacity-50 mt-4 uppercase italic">Calculado mediante la sumatoria de las ramas finales del árbol</p>
-                    </div>
-                </div>
             </div>
         `;
 
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
 
-        // Bind cierre y descarga
-        document.getElementById('btnCloseTreeModal').onclick = () => this.cerrarModalArbol();
-        document.getElementById('btnCloseTreeModalFooter').onclick = () => this.cerrarModalArbol();
+        // Bind cierre
         document.getElementById('closeTreeModalBg').onclick = () => this.cerrarModalArbol();
-        document.getElementById('btnDownloadTree').onclick = () => this.descargarArbolPDF();
+        const btnClose = document.getElementById('btnCloseTreeModal');
+        if (btnClose) btnClose.onclick = () => this.cerrarModalArbol();
     },
 
     descargarArbolPDF() {
@@ -401,6 +409,8 @@ export const UIView = {
     },
 
     renderizarResultado(titulo, resObj, container = null) {
+        this.evidenciasCombo = null;
+        this.selectedEvidencia = null;
         this._renderCore(titulo, {
             concepto: resObj.concepto,
             formula: resObj.formula,
@@ -408,6 +418,25 @@ export const UIView = {
             tablas: resObj.tablas,
             resultado: resObj.resultado,
             resultadoLabel: resObj.resultadoLabel,
+            ocultarConclusion: resObj.ocultarConclusion,
+            markovHtml: resObj.markovHtml,
+            datosGrafico: resObj.datosGrafico,
+            datosArbol: resObj.datosArbol
+        }, container);
+    },
+
+    renderizarResultadoConCombo(titulo, resObj, evidenciasCombo, selectedEvidencia, container = null) {
+        this.evidenciasCombo = evidenciasCombo;
+        this.selectedEvidencia = selectedEvidencia;
+        this._renderCore(titulo, {
+            concepto: resObj.concepto,
+            formula: resObj.formula,
+            pasos: resObj.pasos,
+            tablas: resObj.tablas,
+            resultado: resObj.resultado,
+            resultadoLabel: resObj.resultadoLabel,
+            ocultarConclusion: resObj.ocultarConclusion,
+            markovHtml: resObj.markovHtml,
             datosGrafico: resObj.datosGrafico,
             datosArbol: resObj.datosArbol
         }, container);
